@@ -1,0 +1,7 @@
+# Copy to project root as release-signing.properties and restrict its permissions.
+# Supply your upload key created with Android Studio's signed bundle wizard.
+# Never commit real passwords or keystores. Back up the upload key securely.
+storeFile=release/private/sentinel-upload.jks
+storePassword=REPLACE_LOCALLY
+keyAlias=sentinel-upload
+keyPassword=REPLACE_LOCALLY

@@ -1,0 +1,175 @@
+SENTINEL — PROPOSED APP IMPROVEMENTS
+Written: 6 November 2026
+Status: Product proposal. Features below are not implementation or deployment approval.
+
+PRODUCT DIRECTION
+
+Sentinel keeps an eye on your PC while you are away: follow your tasks,
+catch problems, and know when the work is done.
+
+Focus the first public version on Linux home workstations and their owners:
+people running renders, exports, builds, backups, downloads or local AI jobs.
+Shared household PCs are another useful scenario. Android is the phone client;Q
+Windows and macOS PC support would be separate future projects.
+
+The main value should be answering practical questions, rather than simply
+showing CPU graphs or offering another SSH terminal:
+  - Is my task still working?
+  - Did it finish successfully or fail?
+  - Does my PC need attention?
+  - Is anyone else using it?
+  - What should I check before shutting it down?
+
+CURRENT FOUNDATION
+
+The app already provides foreground Linux monitoring over SSH, health readings,
+process views with CPU/RAM sorting, and a separate basic interactive SSH shell.
+It uses an existing network connection, such as the user's Tailscale network.
+Monitoring and terminal permissions are separate.
+
+Current limitations to address: background alerts and task tracking do not yet
+exist; shutdown is disabled; complete account discovery and server-side process
+sorting are staged helper work and are not deployed on the current PC. Existing
+compatibility sorting can only sort the returned process sample.
+
+PRIORITY 1 — MAKE THE FOUNDATION PORTABLE AND RELIABLE
+
+1. Remove personal setup assumptions
+   Remove active fallback addresses, personal usernames, host pins, drive paths
+   and phone-specific restrictions from the public product. Keep existing users'
+   explicitly saved configuration working. Discover users, mounts and supported
+   sensors from the connected machine.
+
+2. Finish generic connection setup
+   Guide users through host, SSH port, login, host identity verification and
+   monitoring-key pairing. Explain the required Linux helper and check its
+   version/capabilities. Provide clear upgrade, revoke and uninstall instructions.
+   Reuse an existing reachable LAN/VPN connection; do not require Tailscale or
+   silently change networking. Keep terminal access optional and separately paired.
+
+3. Finish correct process sorting and user discovery
+   Discover eligible local accounts independently of which processes appear in
+   a sample. Sort by CPU or RAM on the PC before limiting results. Offer a useful
+   default application view, with background/system processes available through
+   a filter. Label grouping and incomplete visibility honestly.
+
+4. Make connection and freshness states trustworthy
+   Show live, stale, reconnecting and unreachable states with last-updated times.
+   Preserve the last reading visibly as stale during a disconnect. Never infer
+   that a PC is powered off just because SSH cannot reach it. Sensor failures
+   should affect only the relevant reading, not erase the whole health page.
+
+PRIORITY 2 — BUILD THE MAIN REASON TO USE SENTINEL
+
+5. Add "Watch this task"
+   Let a user select a running process or launch an explicitly authorised command
+   to watch. Give it a friendly name, such as "Blender render" or "Nightly backup".
+   Show elapsed time, resource activity and the last confirmed state.
+
+   Use explicit states: running, completed successfully, failed, process ended
+   with unknown result, possibly stalled, and connection lost.
+   An observed process disappearing does not establish success. A confirmed
+   result requires an exit code, completion marker or application integration.
+   Track process identity safely across PID reuse and handle child processes.
+   Do not invent percentage progress or completion estimates from CPU usage.
+
+6. Deliver reliable task notifications
+   Notify when a watched task finishes or fails. Make possible-stall alerts
+   optional, configurable and based on a meaningful observation period.
+   Prevent duplicate alerts and let users mute individual tasks.
+
+   Architecture decision required before implementation: foreground phone SSH
+   polling cannot provide dependable overnight monitoring. Evaluate a small
+   PC-side watcher plus an agreed notification delivery path, including Android
+   background limits, offline phones, reconnects and battery use. Document any
+   additional service, dependency or external provider before adopting it.
+   Do not promise immediate alerts while the phone has no delivery connection.
+
+7. Keep a small task history
+   Show recent watched tasks, start/end times and verified outcomes. Make storage
+   limits and deletion clear. Avoid retaining command output or sensitive command
+   arguments by default. Define how history survives app/PC restarts.
+
+PRIORITY 3 — EXPLAIN WHEN THE PC NEEDS ATTENTION
+
+8. Add useful health alerts
+   Offer opt-in alerts for sustained high temperature, low free disk space and
+   memory pressure. Use duration thresholds and recovery conditions to avoid
+   noisy alerts. Report unavailable sensors rather than fabricated readings.
+   Start with clear rules; do not present guesses as hardware-failure predictions.
+
+9. Add a household activity summary
+   Show signed-in sessions and significant tasks grouped by user where permissions
+   allow. Distinguish an existing account, a signed-in session and observed activity.
+   A background process alone does not mean that a person is actively using the PC.
+   Avoid exposing other users' private command details unnecessarily.
+
+10. Add a pre-shutdown checklist
+    Show watched tasks still running, other signed-in users and available OS
+    shutdown inhibitors. Explain each detected reason to wait. Never guarantee
+    shutdown is safe: unsaved documents and unobserved work may be undetectable.
+
+    Introduce actual shutdown only through an explicit, separately authorised
+    permission and a clear user confirmation. Keep it out of the read-only key's
+    capabilities. Automatic "shutdown when finished" is a later opt-in feature,
+    after task outcomes and shared-user protections are proven reliable.
+
+GUI AND SETTINGS
+
+11. Make Overview answer the important questions first
+    Show connection/freshness, watched tasks, attention items and a compact health
+    summary. Retain the large power control, with an accurate availability state.
+    Keep detailed metrics and the terminal available without crowding Overview.
+
+12. Organise Settings around user decisions
+    Include Connection, Monitoring access, Optional terminal access, Notifications,
+    Data/history, and About/privacy. Show helper compatibility and a useful
+    connection diagnostic. Keep advanced SSH details behind an advanced section.
+
+PUBLIC RELEASE REQUIREMENTS
+
+13. Prepare a product rather than a personal installation
+    Choose the final app identity, provide a signed release bundle, privacy policy,
+    accurate store disclosures, third-party notices and reviewer/demo access.
+    Recheck current Play requirements when preparing submission. Use the detailed
+    findings in docs/PLAY-STORE-READINESS-REVIEW.md as the release baseline.
+
+14. Verify on unrelated setups
+    Test clean setup on another Linux PC, differing usernames/UIDs, shells, mounts
+    and hardware. Cover missing permissions/sensors, sleep, SSH loss, VPN loss,
+    reboot, process exit/PID reuse, Android backgrounding and notification denial.
+    Confirm that a monitoring user cannot gain terminal or shutdown privileges.
+
+PROPOSED DELIVERY ORDER
+
+Phase A: Portable setup, generic helper, correct discovery/sorting and reliable
+         connection/health states.
+Phase B: Watch one task end to end, with honest outcome detection. Prove background
+         tracking and notification delivery before claiming overnight reliability.
+Phase C: Task history, useful health alerts and household activity summaries.
+Phase D: Pre-shutdown checklist and separately authorised manual power actions.
+Release gate: Complete public packaging, disclosures and independent-device testing.
+
+Keep the first task-tracking release narrow. Supporting one dependable command
+workflow is better than claiming automatic progress tracking for every application.
+Launch notification permission and helper-service changes only through a reviewed,
+explicit setup flow. Continue using Android Studio/MCP for Android build work.
+
+DEFER FOR NOW
+
+Windows/macOS support; full Kitty/remote-desktop mirroring; fleet administration;
+Docker dashboards; file management; universal application progress integrations;
+automatic shutdown; and mandatory cloud accounts. These should not delay the
+core "watch my work and tell me what happened" experience.
+
+SUCCESS CRITERIA
+
+  - A new user can connect their own supported Linux PC without editing source.
+  - No personal host, user or drive becomes an implicit default for another user.
+  - CPU/RAM sorting and account discovery reflect the PC, not a truncated sample.
+  - A watched task has a truthful outcome, including "unknown" when necessary.
+  - Alerts survive the documented background/reconnect scenarios without duplicates.
+  - Missing sensors or network loss never appear as valid zero readings.
+  - Monitoring remains read-only; terminal and power privileges require separate
+    explicit authorisation.
+  - Store descriptions match what the released version actually supports.

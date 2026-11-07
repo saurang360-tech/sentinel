@@ -1,0 +1,58 @@
+APP NAME
+Sentinel
+
+SHORT DESCRIPTION
+Monitor your Linux PC over SSH. Check health, processes and a basic terminal.
+
+FULL DESCRIPTION
+Check your Linux PC from your Android phone using your existing SSH connection.
+Sentinel shows system responsiveness, CPU and memory use, storage space,
+available hardware sensors and running processes. Sort processes by CPU or RAM,
+filter by local user, and include system processes when you need more detail.
+
+Optional terminal access opens a basic line-oriented SSH shell using a separate
+authorised key. Monitoring retains its restricted read-only key.
+
+Your connection goes directly to the PC you configure. There are no Sentinel
+cloud accounts, ads, analytics or developer telemetry. Connection settings stay
+on your phone; live readings and terminal output are held in memory. A clearly
+labelled demo lets you explore sample screens without a PC connection.
+
+Requirements: Android 10 or newer, a reachable Linux PC with SSH and Python 3,
+and administrator-reviewed installation of the included Sentinel helper and
+public-key authorisation. Your existing private LAN or VPN such as Tailscale can
+provide connectivity; Sentinel does not install or configure a VPN.
+
+Monitoring refreshes while open. Hardware readings depend on Linux drivers and
+permissions. User discovery covers eligible local accounts, not every directory
+service. Older helpers offer limited compatibility; install the included helper
+for account discovery and sorting before the result limit. Windows/macOS hosts,
+remote desktop, Kitty mirroring, continuous background alerts and job tracking
+are not supported in this version. An unreachable PC may be asleep,
+off or disconnected; the app does not claim to distinguish those states.
+
+REVIEWER ACCESS
+On a clean launch, choose "Explore demo — no connection". This works without
+network permission, credentials, payment or access to the developer's computer.
+Every demo screen is labelled synthetic, and terminal execution is disabled.
+Use Health/Details/Processes to inspect sample layouts and CPU/RAM sorting;
+Settings contains the offline privacy policy, terms and licences.
+Exit demo to inspect the first-use disclosure, then the Android 17+ nearby-device
+permission flow and blank connection setup. Never provide reviewers access to
+the owner's real PC or tailnet. Supply an independent test host/instructions if
+Google requests live connectivity verification.
+
+PUBLISHER TASKS
+Choose the final developer display name and public support email. Provide the
+privacy-policy URL, accurate screenshots, category/content rating, audience and
+other Play Console declarations. Confirm eligibility and any required testing
+track in the actual developer account. Do not advertise future task alerts or
+shutdown features before they are implemented and verified.
+
+0.10 ADDITION FOR FINAL LISTING
+Remember multiple PC/login profiles encrypted on your phone. Fingerprint or
+phone screen lock protects saved details. Optional shutdown uses existing SSH
+and asks for the PC account's administrator/sudo password each time; that
+password is not saved. Existing sudo permissions and systemd are required.
+No additional PC download or permission change is made for shutdown. The app
+respects blocking inhibitors and never automatically retries a power request.

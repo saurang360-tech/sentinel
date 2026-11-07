@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Sentinel</string>
+    <color name="ic_launcher_background">#080808</color>
+</resources>

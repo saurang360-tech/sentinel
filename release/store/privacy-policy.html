@@ -1,0 +1,104 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sentinel — privacy policy</title><style>body{max-width:800px;margin:40px auto;padding:0 20px;font:16px/1.6 system-ui;color:#202020;background:#fff}pre{white-space:pre-wrap;font:inherit}.draft{color:#8b3100}</style><body><p class="draft">PRE-RELEASE DRAFT: publisher details are incomplete.</p><pre>SENTINEL PRIVACY POLICY
+Version 3 — 6 November 2026
+
+Sentinel is an Android companion for a Linux PC you are authorised to access.
+
+No developer collection
+Sentinel has no developer-operated backend, app account system, advertising,
+analytics, tracking or automatic crash-reporting service. The app does not send
+connection details, readings, commands or terminal output to the developer.
+It does not sell data or use advertising/device identifiers.
+
+Data used to provide the app
+You enter a PC hostname/address, SSH port, login, verified host fingerprint and
+optional display name. Saved host/login profiles are encrypted using an Android Keystore AES-GCM key and stored in the app&#x27;s private storage
+on your phone until you replace them, erase local app data or uninstall.
+Separate monitoring and optional terminal SSH key pairs are generated in Android
+Keystore. Private keys are not exported; public keys identify your authorised
+connections and may remain in the PC&#x27;s authorised-key file after uninstall.
+
+When you connect, your configured PC receives your SSH login, public key,
+connection address and monitoring requests or terminal commands. SSH encrypts
+the connection and Sentinel checks the pinned server fingerprint. DNS and your
+chosen network/VPN provider may handle connection metadata under their own
+policies. There is no Sentinel relay or cloud service.
+
+The monitoring helper reads permitted system/process metadata: PC hostname,
+boot identity, uptime, local account names/UIDs, process names/IDs/resource use,
+OS/service state, mount paths/capacity, network interface names/counters and
+available hardware sensor readings. It does not read document contents,
+browser tabs, process command lines or process environments. Readings are
+used to show the connected PC&#x27;s state. Permissions on the PC limit visibility.
+This app does not access your phone&#x27;s contacts, location, photos or microphone.
+
+Live monitoring readings and terminal scrollback are held in memory, not saved
+as history or uploaded by Sentinel. Previous versions&#x27; saved status snapshots
+are removed on upgrade. Terminal input is not saved as an app command history.
+Leaving the terminal or backgrounding the app disconnects its session. Its
+in-memory scrollback can remain until cleared or the app process ends; changing
+the saved PC clears it. Your PC may separately retain SSH logs, shell history,
+command output or files. Commands you run can transmit data to other services;
+those destinations are chosen by you and are outside Sentinel&#x27;s monitoring.
+
+Permissions and choices
+Internet access enables SSH and name resolution. Android 17+ local-network
+permission enables connections to your configured PC; it is requested before
+connections are enabled. Sentinel does not scan for other devices. Monitoring
+runs while its relevant screen is visible, with no continuous background alert
+service. Notification, location and broad storage permissions are not requested.
+
+You may copy public keys to the system clipboard or export the Linux helper to
+a location/provider you choose using Android&#x27;s file picker. Those copies are
+outside Sentinel&#x27;s private storage and remain until you remove them. Clipboard
+and selected storage providers have their own behaviour/policies. Public keys
+are not private-key material, but can link connections using the same key.
+
+Retention and deletion
+Use Settings &gt; Erase local app data to disconnect and remove saved settings,
+notice acknowledgement and both SSH keys and the connection-encryption key. The app closes and requires pairing
+again. Android app backup/device transfer is disabled. Uninstalling also removes
+the app&#x27;s private data. No developer account or server-side deletion request is
+needed because Sentinel operates no such account or datastore.
+Remove the phone&#x27;s public-key entries on the PC to revoke access. Erasing this
+app does not erase PC logs, shell history, exported files or clipboard copies.
+
+Third-party software and platform services
+Sentinel uses Android/Jetpack, Kotlin, JSch and Bouncy Castle libraries for UI,
+lifecycle and encrypted SSH. No analytics/advertising SDK is included. Android,
+Google Play, your PC and your selected network/storage providers may process
+data independently under their own terms; this policy describes Sentinel.
+
+Changes and contact
+Material changes to the disclosed app behaviour will update this policy and,
+where appropriate, require a renewed notice or Android permission request.
+For support and privacy questions, use the developer contact published with
+Sentinel&#x27;s Google Play listing. A public contact and hosted copy of this policy
+must be provided by the publisher before this build is submitted to Google Play.
+
+Device verification and power actions
+Sentinel requires phone fingerprint or screen-lock verification only to reveal
+saved connection settings or terminal details. Opening the app, monitoring and
+shutdown do not require phone verification. Shutdown requires the PC sudo
+password entered fresh for each request. Android handles
+that verification; Sentinel never receives your phone PIN or biometric template.
+USE_BIOMETRIC enables the system verification prompt. Screenshots and recent-app
+previews of the app are blocked. Host/port/login profiles are encrypted in private
+phone storage with an Android Keystore AES-GCM key and remembered separately.
+
+Shutdown uses the existing Terminal SSH key and your PC account&#x27;s existing sudo
+permissions. Each request asks for the PC administrator password in a masked field.
+This is the PC password, not your phone PIN. It is held only for that request, sent
+only to the fingerprint-verified SSH host when its sudo prompt is received, and
+never saved in profiles, command text, logs, history, analytics or a developer
+service. Raw authentication output is not displayed. Your PC/PAM may independently
+record authentication attempts under its existing logging policy.
+
+The app first verifies PC administrator authentication without a power command.
+Only an explicitly confirmed shutdown proceeds to a fixed systemctl command,
+respecting blocking inhibitors and existing sudo rights. The separate verification
+check cannot request shutdown. Password retries and shutdown retries are not
+automatic. All PC users and running work can be affected; a lost reply is reported
+as uncertain. No new PC helper, software download, sudoers/polkit rule, SSH key
+authorisation, service or network change is made for shutdown. Existing monitoring
+still uses its previously documented helper. SSH passwords are not stored.
+</pre></body></html>

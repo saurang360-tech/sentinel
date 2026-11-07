@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sentinel — terms</title><style>body{max-width:800px;margin:40px auto;padding:0 20px;font:16px/1.6 system-ui;color:#202020;background:#fff}pre{white-space:pre-wrap;font:inherit}.draft{color:#8b3100}</style><body><p class="draft">PRE-RELEASE DRAFT: publisher details are incomplete.</p><pre>SENTINEL TERMS OF USE
+Version 3 — 6 November 2026
+
+Use Sentinel only with computers you own or have explicit authorisation to
+access. You are responsible for the SSH account and permissions you choose,
+verifying the host fingerprint independently, and reviewing helper installation
+and key authorisation with the PC administrator.
+
+Monitoring and terminal access are separate. The monitoring key must be
+restricted to the documented read-only helper. Optional terminal authorisation
+allows commands with the chosen account&#x27;s normal permissions. Commands may
+modify/delete files, interrupt work or contact other services. Do not grant
+unnecessary privileges or share private key material.
+
+This release supports compatible Linux PCs over an existing reachable SSH route.
+It requires a compatible Python helper on the PC. Not all sensors or accounts
+will be visible. It provides foreground monitoring and a basic line-oriented SSH
+terminal, not remote desktop, Kitty mirroring, guaranteed background alerts or
+job-completion detection. Optional power-off uses existing Terminal SSH access and the PC account’s existing shutdown permissions, plus explicit confirmation and the PC administrator password. It affects every PC user and interrupts running work.
+
+Readings can be missing, delayed or stale. An unreachable PC is not necessarily
+powered off. Check important work independently. Leaving/backgrounding the
+terminal disconnects it and can interrupt jobs. Sentinel is not a safety-critical
+monitoring, backup or data-recovery system.
+
+Sentinel is provided as available, without a guarantee of uninterrupted service,
+complete hardware compatibility or error-free readings. Nothing in these terms
+excludes statutory consumer rights or liabilities that applicable law does not
+allow to be excluded. You can stop using the app at any time and erase its local
+data. Remove its public keys on the PC to revoke access fully.
+
+See the Privacy policy for data handling and deletion. Open-source components
+remain subject to their respective licences, included in Open-source licences.
+Publisher/support details will be supplied in the public store listing before
+release. These terms do not authorise Sentinel to collect analytics or send your
+PC data to its developer.
+
+Device verification and power actions
+Sentinel requires phone fingerprint or screen-lock verification only to reveal
+saved connection settings or terminal details. Opening the app, monitoring and
+shutdown do not require phone verification. Shutdown requires the PC sudo
+password entered fresh for each request. Android handles
+that verification; Sentinel never receives your phone PIN or biometric template.
+USE_BIOMETRIC enables the system verification prompt. Screenshots and recent-app
+previews of the app are blocked. Host/port/login profiles are encrypted in private
+phone storage with an Android Keystore AES-GCM key and remembered separately.
+
+Shutdown uses the existing Terminal SSH key and your PC account&#x27;s existing sudo
+permissions. Each request asks for the PC administrator password in a masked field.
+This is the PC password, not your phone PIN. It is held only for that request, sent
+only to the fingerprint-verified SSH host when its sudo prompt is received, and
+never saved in profiles, command text, logs, history, analytics or a developer
+service. Raw authentication output is not displayed. Your PC/PAM may independently
+record authentication attempts under its existing logging policy.
+
+The app first verifies PC administrator authentication without a power command.
+Only an explicitly confirmed shutdown proceeds to a fixed systemctl command,
+respecting blocking inhibitors and existing sudo rights. The separate verification
+check cannot request shutdown. Password retries and shutdown retries are not
+automatic. All PC users and running work can be affected; a lost reply is reported
+as uncertain. No new PC helper, software download, sudoers/polkit rule, SSH key
+authorisation, service or network change is made for shutdown. Existing monitoring
+still uses its previously documented helper. SSH passwords are not stored.
+</pre></body></html>

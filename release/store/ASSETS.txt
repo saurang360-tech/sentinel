@@ -1,0 +1,30 @@
+STORE ASSETS — SENTINEL 0.9
+
+store-icon-512.png: 512x512 RGBA PNG, based on the existing Roman shield/helmet.
+feature-graphic-1024x500.png: 1024x500 RGB PNG, rendered from the accompanying SVG.
+The Android adaptive/themed launcher icon still follows the phone's icon mask.
+
+Use these 1080x1920 RGB JPEG screenshots for the phone listing:
+  screenshots/01-health-demo.jpg
+  screenshots/02-details-demo.jpg
+  screenshots/03-processes-ram-demo.jpg
+  screenshots/04-terminal-info-demo.jpg
+
+These are actual captures of the signed release's synthetic offline demo, not
+the owner's PC. A temporary logical viewport was restored after capture.
+The two taller PNG captures are QA references and exceed Play's screenshot
+aspect-ratio limit; do not upload them as the final listing screenshots.
+
+Suggested alt text:
+  Icon: Roman helmet inside a shield, Sentinel's app mark.
+  Feature graphic: Sentinel — monitor Linux PC health, processes and SSH.
+  Health: Labelled demo showing CPU load, temperature, memory and storage.
+  Details: Labelled demo showing Linux system details and network readings.
+  Processes: Labelled demo with user processes sorted by RAM consumption.
+  Terminal: Labelled demo explaining optional separately authorised SSH access.
+
+Checked against current official asset guidance on 6 November 2026:
+https://support.google.com/googleplay/android-developer/answer/9866151
+
+No assets or app bundle have been uploaded to Google Play. Final policy contact,
+hosting and Play Console declarations/testing remain required.
