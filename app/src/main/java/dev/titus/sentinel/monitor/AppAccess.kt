@@ -6,7 +6,7 @@ import android.os.Build
 
 object AppAccess {
     const val LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
-    const val NOTICE_VERSION = 3
+    const val NOTICE_VERSION = 7
     fun acknowledged(context: Context) = context.getSharedPreferences("sentinel-privacy", Context.MODE_PRIVATE)
         .getInt("noticeVersion", 0) == NOTICE_VERSION
     fun acknowledge(context: Context) {

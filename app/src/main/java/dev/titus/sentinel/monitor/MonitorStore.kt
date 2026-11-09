@@ -45,5 +45,16 @@ class MonitorStore(context: Context) {
         require(profile.settings.validationError()==null)
         data.put("selected",id);vault.write(data);return profile.settings
     }
+    fun watches(config: ConnectionSettings): List<TaskWatch> = load()?.optJSONObject("taskWatches")?.optJSONArray(watchHost(config))?.let { rows ->
+        require(rows.length()<=32)
+        (0 until rows.length()).map { TaskWatch.decode(rows.getJSONObject(it)) }
+    }.orEmpty()
+    fun saveWatches(config: ConnectionSettings, watches: List<TaskWatch>) {
+        require(watches.size<=32)
+        val data=load() ?: error("Saved connections are locked")
+        val hosts=data.optJSONObject("taskWatches") ?: JSONObject()
+        hosts.put(watchHost(config),org.json.JSONArray().also { rows -> watches.forEach { rows.put(it.encode()) } })
+        data.put("taskWatches",hosts);vault.write(data)
+    }
     fun cached(): MonitorUi = MonitorUi()
 }

@@ -46,7 +46,7 @@ class SshPowerCommandsTest {
                             output.write((password+"\n").toByteArray());output.flush()
                         }
                         if(captured.endsWith(SshPowerCommands.VERIFIED+"\n")) {
-                            if(execute && script==SshPowerCommands.SHUTDOWN) {
+                            if(execute && script in listOf(SshPowerCommands.SHUTDOWN,SshPowerCommands.REBOOT)) {
                                 output.write((SshPowerCommands.EXECUTE+"\n").toByteArray());output.flush()
                             } else output.close()
                         }
@@ -55,7 +55,7 @@ class SshPowerCommandsTest {
             }.apply { start() }
             if(!process.waitFor(5,TimeUnit.SECONDS)) { process.destroyForcibly();error("Fixed script failed to terminate") }
             reader.join(1000)
-            if(called.exists()) assertEquals("/usr/bin/systemctl --check-inhibitors=yes poweroff",called.readText())
+            if(called.exists()) assertEquals("/usr/bin/systemctl --check-inhibitors=yes "+(if(script==SshPowerCommands.REBOOT) "reboot" else "poweroff"),called.readText())
             return Triple(process.exitValue(),captured.toString(),called.exists())
         } finally { dir.deleteRecursively() }
     }
@@ -76,4 +76,11 @@ class SshPowerCommandsTest {
         assertNotEquals(0,inhibited.first);assertFalse(inhibited.second.contains(SshPowerCommands.ACCEPTED))
         assertFalse(SshPowerCommands.SHUTDOWN.contains("correct"))
     }
+    @Test fun rebootUsesSameAuthenticationAndInhibitorGuard() {
+        val accepted=run(SshPowerCommands.REBOOT)
+        assertEquals(0,accepted.first);assertTrue(accepted.third)
+        assertFalse(run(SshPowerCommands.REBOOT,password="wrong").third)
+        assertFalse(run(SshPowerCommands.REBOOT,execute=false).third)
+    }
+
 }

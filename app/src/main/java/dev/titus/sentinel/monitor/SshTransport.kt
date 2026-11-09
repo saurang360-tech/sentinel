@@ -10,6 +10,7 @@ import kotlin.coroutines.resume
 sealed class ProbeResult {
     data class Success(val raw: String, val snapshot: Snapshot): ProbeResult()
     data class Processes(val snapshot: ProcessSnapshot): ProbeResult()
+    data class Watches(val raw: String): ProbeResult()
     data class Health(val snapshot: HealthSnapshot): ProbeResult()
     data class Failed(val phase: Phase, val detail: String, val diagnostic: String = ""): ProbeResult()
 }
@@ -32,17 +33,19 @@ private class LegacyProcessRequest: Exception()
 class SshTransport {
     private val worker = Executors.newSingleThreadExecutor { task -> Thread(task,"Sentinel SSH").apply { isDaemon = true } }
     private val session = AtomicReference<Session?>()
+    @Volatile var connectedElapsed: Long?=null
+        private set
     private var connectedConfig: ConnectionSettings? = null
-    fun disconnect() { session.getAndSet(null)?.disconnect() }
+    fun disconnect() { session.getAndSet(null)?.disconnect();connectedElapsed=null }
     fun close() { disconnect(); worker.shutdownNow() }
-    suspend fun probe(config: ConnectionSettings, identity: PhoneIdentity, query: ProcessQuery? = null, health: Boolean = false): ProbeResult = suspendCancellableCoroutine { continuation ->
+    suspend fun probe(config: ConnectionSettings, identity: PhoneIdentity, query: ProcessQuery? = null, health: Boolean = false, watchCommand: String? = null): ProbeResult = suspendCancellableCoroutine { continuation ->
         val future = worker.submit {
-            val result = read(config,identity,query,health)
+            val result = read(config,identity,query,health,watchCommand=watchCommand)
             if(continuation.isActive) continuation.resume(result)
         }
         continuation.invokeOnCancellation { disconnect(); future.cancel(true) }
     }
-    private fun read(config: ConnectionSettings, identity: PhoneIdentity, query: ProcessQuery?, health: Boolean, legacy: Boolean = false): ProbeResult {
+    private fun read(config: ConnectionSettings, identity: PhoneIdentity, query: ProcessQuery?, health: Boolean, legacy: Boolean = false, watchCommand: String? = null): ProbeResult {
         var pinned: PinRepository? = null
         var authenticated = false
         var stage = "connect"
@@ -50,6 +53,8 @@ class SshTransport {
         var exitStatus = -1
         try {
             require(config.validationError() == null)
+            require(watchCommand == null || watchCommand == "sentinel-jobs-v1" || validServiceRequest(watchCommand) ||
+                watchCommand.matches(Regex("sentinel-watches-v1 [1-9][0-9]{0,9}:[0-9]{1,20}:[0-9a-f-]{36}( [1-9][0-9]{0,9}:[0-9]{1,20}:[0-9a-f-]{36}){0,31}")))
             var ssh = session.get()
             if(ssh == null || !ssh.isConnected || connectedConfig != config) {
                 disconnect()
@@ -66,6 +71,7 @@ class SshTransport {
                 session.set(ssh)
                 if(Thread.currentThread().isInterrupted) throw InterruptedException()
                 ssh.connect(3500)
+                connectedElapsed=android.os.SystemClock.elapsedRealtime()
                 ssh.timeout = 0
                 connectedConfig = config
             }
@@ -73,7 +79,7 @@ class SshTransport {
             stage = "channel"
             val channel = ssh.openChannel("exec") as ChannelExec
             try {
-                channel.setCommand(if(health) "sentinel-health-v1" else if(query == null) "sentinel-status-v1" else if(legacy) "sentinel-processes-v1 all" else query.command())
+                channel.setCommand(watchCommand ?: if(health) "sentinel-health-v1" else if(query == null) "sentinel-status-v1" else if(legacy) "sentinel-processes-v1 all" else query.command())
                 channel.setPty(false)
                 channel.setAgentForwarding(false)
                 channel.setInputStream(null)
@@ -90,7 +96,7 @@ class SshTransport {
                     while(input.available() > 0) {
                         val n = input.read(buffer,0,minOf(buffer.size,input.available()))
                         if(n < 0) break
-                        require(bytes.size() + n <= if(query == null && !health) 32768 else 131072) { "Oversized status response" }
+                        require(bytes.size() + n <= if(watchCommand!=null) 65536 else if(query == null && !health) 32768 else 131072) { "Oversized status response" }
                         bytes.write(buffer,0,n)
                         responseBytes=bytes.size()
                     }
@@ -104,7 +110,7 @@ class SshTransport {
                 require(exitStatus == 0) { "Status command unavailable" }
                 stage="decode"
                 val raw = bytes.toString(Charsets.UTF_8.name()).trim()
-                return if(health) ProbeResult.Health(decodeHealth(raw)) else if(query == null) ProbeResult.Success(raw,decodeSnapshot(raw)) else ProbeResult.Processes(if(legacy) decodeLegacyProcesses(raw,query) else decodeProcesses(raw,query))
+                return if(watchCommand != null) ProbeResult.Watches(raw) else if(health) ProbeResult.Health(decodeHealth(raw)) else if(query == null) ProbeResult.Success(raw,decodeSnapshot(raw)) else ProbeResult.Processes(if(legacy) decodeLegacyProcesses(raw,query) else decodeProcesses(raw,query))
             } finally { channel.disconnect() }
         } catch(error: Exception) {
             if(error is LegacyProcessRequest) return read(config,identity,query,health,legacy=true)

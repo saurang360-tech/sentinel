@@ -3,7 +3,8 @@
 Implemented for 0.9: generic runtime settings, memory-only samples, first-use
 disclosure/terms acknowledgement, Android 17 local-network permission with
 denial handling, offline legal text, local erasure, generic helper export/setup,
-synthetic offline demo and separate production/debug application IDs.
+separate production/debug application IDs. Demo mode has since been removed;
+refresh historical screenshots and reviewer instructions before submitting.
 
 Production ID: dev.titus.sentinel. Existing phone preview keeps
 dev.titus.sentinel.preview, its saved connection and its existing SSH keys.

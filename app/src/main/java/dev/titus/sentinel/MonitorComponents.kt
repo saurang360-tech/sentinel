@@ -38,28 +38,36 @@ internal fun statusMessage(phase: Phase): String = when(phase) {
     Phase.Unknown -> "Connect to your PC’s network, then refresh."
     Phase.Online -> ""
 }
-@Composable internal fun SampleBar(phase: Phase,busy: Boolean,time: Long?,refresh: () -> Unit) {
-    Column {
+@Composable internal fun SampleBar(phase: Phase,busy: Boolean,time: Long?,refresh: () -> Unit,configure: (() -> Unit)?=null,refreshEnabled: Boolean=true) {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(time) { while(true) { now=System.currentTimeMillis();kotlinx.coroutines.delay(1000) } }
+    val age=time?.let { ((now-it).coerceAtLeast(0)/1000) }
+    Column(Modifier.fillMaxWidth().padding(bottom=12.dp)) {
         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-            Box(Modifier.size(6.dp).background(if(phase==Phase.Online) Color(0xFFF4F4F1) else Color(0xFFE4C68A),CircleShape))
-            Spacer(Modifier.width(8.dp))
+            Box(Modifier.size(8.dp).background(when(phase) { Phase.Online -> Accent;Phase.SecurityError -> Danger;else -> Amber },CircleShape))
+            Spacer(Modifier.width(9.dp))
             Column(Modifier.weight(1f)) {
-                Text(statusLabel(phase),fontSize=12.sp,fontWeight=FontWeight.Medium)
-                if(time!=null) Note("Updated ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(time))}")
+                Text(statusLabel(phase),fontSize=18.sp,fontWeight=FontWeight.SemiBold)
+                if(age!=null) Text(when { age<5 -> "Updated just now";age<60 -> "Updated ${age}s ago";age<3600 -> "Updated ${age/60}m ago";else -> "Updated ${DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.SHORT).format(Date(time))}" },fontSize=16.sp,color=Muted)
             }
-            TextButton(onClick=refresh,enabled=!busy) { Text(if(busy) "Updating…" else "Refresh",fontSize=12.sp) }
+            TextButton(onClick=refresh,enabled=!busy && refreshEnabled) { Text(if(busy) "Updating…" else if(phase==Phase.Online) "Refresh" else "Retry") }
         }
-        if(phase !in setOf(Phase.Online,Phase.Unknown,Phase.Checking)) { Note(statusMessage(phase)); Spacer(Modifier.height(10.dp)) }
-        Spacer(Modifier.height(8.dp))
+        if(busy) LinearProgressIndicator(Modifier.fillMaxWidth().padding(vertical=6.dp),color=Accent,trackColor=Line)
+        if(phase !in setOf(Phase.Online,Phase.Checking)) {
+            Note(statusMessage(phase))
+            if(configure!=null && phase in setOf(Phase.Unknown,Phase.Pairing,Phase.SecurityError,Phase.NoData)) {
+                TextButton(onClick=configure) { Text(when(phase) { Phase.SecurityError -> "Review host fingerprint";Phase.Pairing -> "Open pairing setup";else -> "Open connection settings" }) }
+            }
+        }
     }
 }
-@Composable internal fun Disclosure(title: String, content: @Composable ColumnScope.() -> Unit) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
+@Composable internal fun Disclosure(title: String, initiallyExpanded: Boolean=false, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
     SurfaceCard {
         Row(Modifier.fillMaxWidth().heightIn(min=48.dp).clickable(role=Role.Button,onClickLabel=if(expanded) "Collapse" else "Expand") { expanded=!expanded }
             .semantics { stateDescription=if(expanded) "Expanded" else "Collapsed" },verticalAlignment=Alignment.CenterVertically) {
-            Text(title,fontSize=14.sp,fontWeight=FontWeight.Medium,modifier=Modifier.weight(1f))
-            Text(if(expanded) "−" else "+",fontSize=20.sp,color=Color(0xFFA5A5A5))
+            Text(title,fontSize=16.sp,fontWeight=FontWeight.Medium,modifier=Modifier.weight(1f))
+            Text(if(expanded) "−" else "+",fontSize=20.sp,color=Muted)
         }
         if(expanded) { Spacer(Modifier.height(8.dp)); content() }
     }

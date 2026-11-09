@@ -15,8 +15,7 @@ authorised key. Monitoring retains its restricted read-only key.
 
 Your connection goes directly to the PC you configure. There are no Sentinel
 cloud accounts, ads, analytics or developer telemetry. Connection settings stay
-on your phone; live readings and terminal output are held in memory. A clearly
-labelled demo lets you explore sample screens without a PC connection.
+on your phone; live readings and terminal output are held in memory. Theme and layout controls are available without fabricated sample readings.
 
 Requirements: Android 10 or newer, a reachable Linux PC with SSH and Python 3,
 and administrator-reviewed installation of the included Sentinel helper and
@@ -32,15 +31,12 @@ are not supported in this version. An unreachable PC may be asleep,
 off or disconnected; the app does not claim to distinguish those states.
 
 REVIEWER ACCESS
-On a clean launch, choose "Explore demo — no connection". This works without
-network permission, credentials, payment or access to the developer's computer.
-Every demo screen is labelled synthetic, and terminal execution is disabled.
-Use Health/Details/Processes to inspect sample layouts and CPU/RAM sorting;
-Settings contains the offline privacy policy, terms and licences.
-Exit demo to inspect the first-use disclosure, then the Android 17+ nearby-device
-permission flow and blank connection setup. Never provide reviewers access to
-the owner's real PC or tailnet. Supply an independent test host/instructions if
-Google requests live connectivity verification.
+On a clean launch, review the first-use disclosure and permission flow. There
+is no demo mode. Live readings require an independently configured Linux SSH
+test host and the included helper. Do not provide access to the owner's PC.
+Without a connection the app shows missing readings explicitly. Legal documents
+remain available without a PC. Review screenshots must be refreshed for the new
+widget workspace; historical demo captures do not represent the current build.
 
 PUBLISHER TASKS
 Choose the final developer display name and public support email. Provide the

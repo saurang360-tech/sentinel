@@ -1,0 +1,22 @@
+Background monitor validation — 7 November 2026
+
+Gradle assembleDebug, testDebugUnitTest, lintDebug, assembleDebugAndroidTest: PASS.
+Android unit tests: 21 passed.
+Python helper tests: 32 passed.
+Lint: 0 errors; dependency/resource and SharedPreferences style warnings remain.
+Preview app installed with adb install -r; user data/pairing retained.
+Device: Pixel 9a. Synthetic sources only, no real-PC SSH or power calls.
+Synthetic receipts isolated; notification permission temporarily granted for tests, then restored.
+
+
+dev.titus.sentinel.monitor.TaskMonitorServiceTest:..
+dev.titus.sentinel.monitor.TaskWatchProtocolTest:...
+dev.titus.sentinel.monitor.RedesignNavigationTest:....
+
+Time: 36.158
+
+OK (9 tests)
+
+
+
+Not validated: real SSH with updated helper, locked-phone SSH signing, Doze/network loss overnight, process kill/reboot recovery, independent hardware or Play approval.

@@ -1,0 +1,25 @@
+Alert/health/assurance validation — 9 November 2026
+
+Python: 34 tests passed.
+Android JVM unit tests: 27 passed, 0 failures.
+Gradle assembleDebug, testDebugUnitTest, lintDebug, assembleDebugAndroidTest: PASS.
+Lint: 0 errors; style/dependency/resource warnings remain.
+Preview APK installed via adb install -r; pairing/data retained.
+Device: Pixel 9a. Notification permission was already granted before testing and was left unchanged.
+All device sources and policy/receipt namespaces are synthetic/isolated; no real-PC SSH/power calls.
+No installed PC helper, keys, sudo policy, services or network settings were changed.
+
+Latest device run:
+
+dev.titus.sentinel.monitor.AlertDeliveryTest:...
+dev.titus.sentinel.monitor.TaskMonitorServiceTest:..
+dev.titus.sentinel.monitor.TaskWatchProtocolTest:...
+dev.titus.sentinel.monitor.RedesignNavigationTest:....
+
+Time: 37.097
+
+OK (12 tests)
+
+
+
+Not covered: actual PC helper integration, real sensors on unrelated hardware, overnight/Doze/locked-device SSH, process-death queue persistence or release/store acceptance.

@@ -18,4 +18,5 @@ internal object SshPowerCommands {
 """
     val SHUTDOWN="""exec /bin/sh -c '${AUTH}IFS= read -r decision || exit 78; [ "${'$'}decision" = "$EXECUTE" ] || exit 78; sudo -k -S -p "$EXEC_PROMPT" -- /usr/bin/systemctl --check-inhibitors=yes poweroff || { printf "%s\n" "$REFUSED"; exit 77; }; printf "%s\n" "$ACCEPTED"'
 """
+    val REBOOT=SHUTDOWN.replace("--check-inhibitors=yes poweroff", "--check-inhibitors=yes reboot")
 }

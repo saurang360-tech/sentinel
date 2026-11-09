@@ -1,5 +1,5 @@
 SENTINEL PRIVACY POLICY
-Version 3 — 6 November 2026
+Version 7 — 9 November 2026
 
 Sentinel is an Android companion for a Linux PC you are authorised to access.
 
@@ -31,8 +31,27 @@ browser tabs, process command lines or process environments. Readings are
 used to show the connected PC's state. Permissions on the PC limit visibility.
 This app does not access your phone's contacts, location, photos or microphone.
 
-Live monitoring readings and terminal scrollback are held in memory, not saved
-as history or uploaded by Sentinel. Previous versions' saved status snapshots
+Live monitoring readings and terminal scrollback are held in memory and are not
+uploaded by Sentinel. When you explicitly watch a process, its name, boot/PID/start
+identity, last confirmed observation and up to 20 state changes are stored in the
+same encrypted phone vault as your connection settings. At most 32 watches are
+retained per connection until you choose Delete watches and history or erase app
+data. These records do not contain process command lines or output.
+
+The optional locally invoked PC job runner stores labels, timestamps, runner
+identity and exit results in a private ~/.local/state/sentinel/jobs directory.
+It does not retain command arguments or stdout/stderr. Results are visible for up
+to 7 days, capped at 64 returned jobs; running jobs are retained. Completed files
+are pruned on the next job launch; run delete-history on the PC for immediate
+completed-history deletion. The read-only SSH monitoring key cannot launch jobs
+or delete PC history. Job results received on the phone remain in memory.
+Optional expected-success rules retain a chosen label, interval/grace window and
+last observed successful exit timestamp on the PC until forget-expectations is
+run. They do not prove a backup's contents or that an external scheduler ran.
+The monitoring key reads these rules but cannot create or delete them.
+Only the directly launched command's exit is verified; detached children are
+outside that job's outcome. Jobs may themselves create output or transmit data.
+ Previous versions' saved status snapshots
 are removed on upgrade. Terminal input is not saved as an app command history.
 Leaving the terminal or backgrounding the app disconnects its session. Its
 in-memory scrollback can remain until cleared or the app process ends; changing
@@ -44,8 +63,37 @@ Permissions and choices
 Internet access enables SSH and name resolution. Android 17+ local-network
 permission enables connections to your configured PC; it is requested before
 connections are enabled. Sentinel does not scan for other devices. Monitoring
-runs while its relevant screen is visible, with no continuous background alert
-service. Notification, location and broad storage permissions are not requested.
+normally runs while its relevant screen is visible. If you explicitly start a
+background task-monitoring session, Sentinel maintains its SSH polling through
+an Android foreground service with an ongoing notification and Stop action.
+Notification permission is requested only when you choose Start background
+monitor or Test notification. The connected-device foreground-service permission
+and CHANGE_NETWORK_STATE declaration support the PC network connection; Sentinel
+does not change your network configuration. Location and broad storage permissions
+are not requested.
+
+Background sessions hold the selected connection and watched identities in memory
+so monitoring can continue while locked without weakening the existing encrypted
+vault. They are not restored automatically after app/process stop or phone restart.
+Changing connections or deleting watches stops the session. Android, power-saving
+rules, lost networks and unavailable PCs may delay/prevent checks and notifications.
+No cloud relay is configured. Starting a session baselines historical job results
+so old completed jobs are not announced as new completions. Notification handoff
+to Android is not proof the notification was seen or delivered audibly.
+
+Optional phone alert settings (severity, local quiet hours, cooldown, health-alert
+opt-in and up to 256 hashed task mute rules) are retained in private preferences
+until local app erasure or uninstall. Muted and below-severity events are suppressed.
+Quiet/cooldown queues contain up to 256 events only in session memory; stopping
+or losing the session discards that queue. Health alerts use sustained observations,
+not background logging, and add health polling only while opted in.
+
+Up to 256 SHA-256 event receipts are retained in private phone preferences for
+notification deduplication. They contain no plaintext hostnames, labels, command
+output or credentials. They are removed by erasing local app data or uninstalling.
+Notification content includes selected task labels and outcomes and may be retained
+by Android until dismissed; notifications use private lock-screen visibility.
+Use Android notification settings to control their display and sound.
 
 You may copy public keys to the system clipboard or export the Linux helper to
 a location/provider you choose using Android's file picker. Those copies are
@@ -101,3 +149,22 @@ automatic. All PC users and running work can be affected; a lost reply is report
 as uncertain. No new PC helper, software download, sudoers/polkit rule, SSH key
 authorisation, service or network change is made for shutdown. Existing monitoring
 still uses its previously documented helper. SSH passwords are not stored.
+
+Custom workspace and optional diagnostic requests
+Tab names, widget placement/sizes, polling intervals and appearance preferences
+are stored locally until reset or app-data erasure. Foreground telemetry history
+is bounded to ten minutes in memory and is cleared when connections change.
+Custom terminal macro templates are saved in the encrypted connection vault.
+Parameter values and command input are memory-only. Do not put passwords or
+other secrets into saved templates. Insert-only macros require Send; run macros
+require an explicit command review and confirmation and are never replayed.
+
+Expanding a failed service may request up to 40 recent journal entries for that
+unit through the restricted helper. Entries can contain sensitive error details,
+paths or stack traces recorded by the service. They are displayed in memory,
+not added to a diagnostic log or uploaded. Existing PC journal permissions apply.
+
+Both shutdown and reboot use a held arming control followed by PC administrator
+authentication. Existing SSH/sudo rights and inhibitor checks apply. No automatic
+retry or force action is used. Optional timed CLI jobs preserve the direct child
+return code; timeout records do not prove that detached descendants stopped.

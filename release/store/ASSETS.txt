@@ -1,10 +1,14 @@
+HISTORICAL ASSETS — refresh before publishing the widget workspace.
+The app no longer includes demo mode. The following demo captures are archived
+references and must not be used to represent the current app.
+
 STORE ASSETS — SENTINEL 0.9
 
 store-icon-512.png: 512x512 RGBA PNG, based on the existing Roman shield/helmet.
 feature-graphic-1024x500.png: 1024x500 RGB PNG, rendered from the accompanying SVG.
 The Android adaptive/themed launcher icon still follows the phone's icon mask.
 
-Use these 1080x1920 RGB JPEG screenshots for the phone listing:
+Historical 1080x1920 RGB JPEG screenshots:
   screenshots/01-health-demo.jpg
   screenshots/02-details-demo.jpg
   screenshots/03-processes-ram-demo.jpg

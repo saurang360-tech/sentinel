@@ -14,6 +14,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
+internal enum class PcPowerAction { Shutdown, Reboot }
 internal data class PowerUi(val busy: Boolean=false,val message: String="")
 internal class ShutdownController(private val activity: ComponentActivity) {
     private val state=MutableStateFlow(PowerUi());val ui=state.asStateFlow()
@@ -25,7 +26,7 @@ internal class ShutdownController(private val activity: ComponentActivity) {
         if(state.value.busy) state.value=PowerUi(message="Cancelled. A shutdown already sent cannot be recalled. No automatic retry.")
     }
     fun close() { cancel();worker.shutdownNow() }
-    fun request(config: ConnectionSettings,password: CharArray,checkOnly: Boolean=false) {
+    fun request(config: ConnectionSettings,password: CharArray,checkOnly: Boolean=false,action: PcPowerAction=PcPowerAction.Shutdown) {
         if(state.value.busy) { password.fill('\u0000');return }
         if(!AppAccess.canConnect(activity) || config.validationError()!=null ||
             password.isEmpty() || password.size>1024 || password.any { it=='\n' || it=='\r' || it=='\u0000' }) {
@@ -57,7 +58,7 @@ internal class ShutdownController(private val activity: ComponentActivity) {
                     channel.setPty(false);channel.setAgentForwarding(false);channel.setXForwarding(false);channel.setInputStream(null)
                     val input=channel.inputStream;val errors=channel.extInputStream;val output=channel.outputStream
                     channel.connect(5000);check(valid())
-                    output.write((if(checkOnly) SshPowerCommands.AUTH_CHECK else SshPowerCommands.SHUTDOWN).toByteArray());output.flush()
+                    output.write((if(checkOnly) SshPowerCommands.AUTH_CHECK else if(action==PcPowerAction.Reboot) SshPowerCommands.REBOOT else SshPowerCommands.SHUTDOWN).toByteArray());output.flush()
                     val stdout=ByteArrayOutputStream();val stderr=ByteArrayOutputStream();val buffer=ByteArray(1024)
                     var authSent=false;var execAuthSent=false;var verified=false
                     val deadline=System.nanoTime()+30_000_000_000L
@@ -92,7 +93,7 @@ internal class ShutdownController(private val activity: ComponentActivity) {
                             if(!checkOnly) check(text.lineSequence().any { it.trim()==SshPowerCommands.ACCEPTED })
                             if(generation.get()==ticket) state.value=PowerUi(message=if(checkOnly)
                                 "PC administrator authentication verified. No shutdown requested."
-                                else "Shutdown accepted by the PC. Remote access will end; disconnection alone does not prove power is off.")
+                                else "Power request accepted by the PC. Remote access will end; disconnection alone does not confirm completion.")
                             break
                         }
                         Thread.sleep(20)

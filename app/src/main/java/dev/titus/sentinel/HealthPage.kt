@@ -20,8 +20,8 @@ private fun Double?.rate(): String = this?.let {
 } ?: "—"
 private fun JSONArray.rows(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
 private fun percent(used: Double?,total: Double?): Double? = if(used!=null && total!=null && total>0) (100*used/total).coerceIn(0.0,100.0) else null
-@Composable internal fun HealthPage(ui: HealthUi, details: Boolean, refresh: () -> Unit) {
-    SampleBar(ui.phase,ui.busy,ui.lastContactMillis,refresh)
+@Composable internal fun HealthPage(ui: HealthUi, details: Boolean, configure: (() -> Unit)?=null, refresh: () -> Unit) {
+    SampleBar(ui.phase,ui.busy,ui.lastContactMillis,refresh,configure)
     val j=ui.snapshot?.data ?: run {
         SurfaceCard { Note(statusMessage(ui.phase).ifEmpty { "Waiting for health readings…" }) }
         return
@@ -30,7 +30,7 @@ private fun percent(used: Double?,total: Double?): Double? = if(used!=null && to
         val warnings=j.getJSONArray("warnings")
         if(warnings.length()>0) {
             SurfaceCard {
-                Eyebrow(if(ui.phase==Phase.Online) "HEALTH ALERTS" else "LAST KNOWN ALERTS")
+                Eyebrow(if(ui.phase==Phase.Online) "HEALTH NOTICES" else "LAST KNOWN NOTICES")
                 Spacer(Modifier.height(8.dp))
                 for(i in 0 until warnings.length()) Note(warnings.getString(i))
             }
@@ -38,16 +38,16 @@ private fun percent(used: Double?,total: Double?): Double? = if(used!=null && to
         }
         val cpu=j.getJSONObject("cpu"); val memory=j.getJSONObject("memory")
         val busy=cpu.number("utilisationPercent")
-        Metric("CPU",cpu.getString("name").replace("(R)","").replace("(TM)",""),busy?.toInt(),busy.display("%"),"Temperature · ${cpu.number("temperatureC").display("°C")}")
+        Metric("CPU",cpu.getString("name").replace("(R)","").replace("(TM)",""),busy?.toInt(),busy?.display("%") ?: "Unavailable","Temperature · ${cpu.number("temperatureC").display("°C")}")
         val ram=percent(memory.number("usedBytes"),memory.number("totalBytes"))
         Metric("RAM","${memory.number("totalBytes").bytes()} usable",ram?.toInt(),ram.display("%"),"${memory.number("usedBytes").bytes()} used · ${memory.number("availableBytes").bytes()} available")
         j.getJSONArray("volumes").rows().forEach { v ->
             val p=percent(v.number("usedBytes"),v.number("totalBytes"))
-            Metric(v.getString("label"),v.getString("path")+" · "+v.number("totalBytes").bytes(),p?.toInt(),p?.display("%") ?: "—",if(v.getBoolean("mounted")) "${v.number("usedBytes").bytes()} used · ${v.number("availableBytes").bytes()} available" else "Not mounted")
+            Metric(v.getString("label"),v.getString("path")+" · "+v.number("totalBytes").bytes(),p?.toInt(),p?.display("%") ?: "Unavailable",if(v.getBoolean("mounted")) "${v.number("usedBytes").bytes()} used · ${v.number("availableBytes").bytes()} available" else "Not mounted")
         }
         j.getJSONArray("gpus").rows().forEach { gpu ->
             val p=gpu.number("utilisationPercent")
-            Metric("GPU",gpu.getString("name"),p?.toInt(),p?.display("%") ?: "—",if(p==null && gpu.number("temperatureC")==null && gpu.number("vramUsedBytes")==null) "Sensors unavailable" else "${gpu.number("temperatureC").display("°C")} · VRAM ${gpu.number("vramUsedBytes").bytes()}")
+            Metric("GPU",gpu.getString("name"),p?.toInt(),p?.display("%") ?: "Unavailable",if(p==null && gpu.number("temperatureC")==null && gpu.number("vramUsedBytes")==null) "Sensors unavailable" else "${gpu.number("temperatureC").display("°C")} · VRAM ${gpu.number("vramUsedBytes").bytes()}")
         }
         SurfaceCard {
             Eyebrow("NETWORK · ↓ / ↑")

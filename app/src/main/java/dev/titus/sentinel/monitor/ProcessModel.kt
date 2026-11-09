@@ -36,7 +36,7 @@ data class ProcessRow(val pid: Int, val name: String, val uid: Int, val owner: S
 }
 data class ProcessSnapshot(val host: String, val sampledAt: String, val query: ProcessQuery,
     val sampleSeconds: Double, val totalMatching: Int, val limited: Boolean, val scanLimited: Boolean,
-    val denied: Int, val vanished: Int, val rows: List<ProcessRow>, val users: List<PcUser> = emptyList(), val serverSorted: Boolean = true) {
+    val denied: Int, val vanished: Int, val rows: List<ProcessRow>, val users: List<PcUser> = emptyList(), val serverSorted: Boolean = true, val bootId: String? = null, val jobsSupported: Boolean = false) {
     fun validate() {
         require(host.length in 1..64 && host.none { it.isISOControl() })
         java.time.Instant.parse(sampledAt)
@@ -63,7 +63,7 @@ internal fun decodeProcesses(raw: String, query: ProcessQuery): ProcessSnapshot 
             if(p.isNull("rssBytes")) null else p.getLong("rssBytes"),p.getDouble("runtimeSeconds"))
     } }
     return ProcessSnapshot(j.getString("host"),j.getString("sampledAt"),query,j.getDouble("sampleSeconds"),
-        j.getInt("totalMatching"),j.getBoolean("limited"),j.getBoolean("scanLimited"),j.getInt("denied"),j.getInt("vanished"),rows,decodeUsers(j)).also { it.validate() }
+        j.getInt("totalMatching"),j.getBoolean("limited"),j.getBoolean("scanLimited"),j.getInt("denied"),j.getInt("vanished"),rows,decodeUsers(j),bootId=j.optString("bootId").takeIf { it.isNotEmpty() }?.also { require(java.util.UUID.fromString(it).toString()==it) },jobsSupported=j.optJSONObject("capabilities")?.optInt("jobs")==1).also { it.validate() }
 }
 data class ProcessUi(val phase: Phase = Phase.Unknown, val message: String = "No process sample received yet.",
     val snapshot: ProcessSnapshot? = null, val lastContactMillis: Long? = null, val receivedElapsed: Long? = null, val busy: Boolean = false) {

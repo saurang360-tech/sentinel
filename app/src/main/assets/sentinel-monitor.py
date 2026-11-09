@@ -20,7 +20,7 @@ def collect():
             "bootId": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
             "uptimeSeconds": float(Path("/proc/uptime").read_text().split()[0]),
             "systemState": state if state in ALLOWED_STATES else "unknown",
-            "users": discover_users(), "capabilities": {"processes": 2, "users": 1},
+            "users": discover_users(), "capabilities": {"processes": 2, "users": 1, "watches": 1, "jobs": 1},
             "sampledAt": datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")}
 
 # PROCESS_COLLECTOR_SOURCE
@@ -186,11 +186,12 @@ def memory_values(raw):
     result={}
     for line in raw.splitlines():
         parts=line.split()
-        if len(parts)>=2 and parts[0] in {'MemTotal:','MemAvailable:','SwapTotal:','SwapFree:'}:
+        if len(parts)>=2 and parts[0] in {'MemTotal:','MemAvailable:','SwapTotal:','SwapFree:','MemFree:','Buffers:','Cached:'}:
             result[parts[0][:-1]]=int(parts[1])*1024
     total=result.get('MemTotal');available=result.get('MemAvailable')
     swap_total=result.get('SwapTotal');swap_free=result.get('SwapFree')
     return {'totalBytes':total,'availableBytes':available,
+            'freeBytes':result.get('MemFree'),'buffersBytes':result.get('Buffers'),'cachedBytes':result.get('Cached'),
             'usedBytes':total-available if total is not None and available is not None and 0<=available<=total else None,
             'swapTotalBytes':swap_total,'swapUsedBytes':swap_total-swap_free if swap_total is not None and swap_free is not None and 0<=swap_free<=swap_total else None}
 
@@ -220,7 +221,7 @@ def mount_unescape(value):
 
 def volumes(mountinfo=None):
     raw=text_value(PROC/'self/mountinfo','') if mountinfo is None else mountinfo
-    candidates=[('System','/',None,'Storage')]
+    candidates=[('System','/',None,'Storage'),('Home','/home',None,'Storage'),('Variable data','/var',None,'Storage')]
     for line in raw.splitlines():
         fields=line.split()
         try:
@@ -238,7 +239,7 @@ def volumes(mountinfo=None):
     seen=set();paths=set();values=[]
     for label,path,source,kind in candidates:
         if path in paths or source is not None and source in seen:continue
-        if source is None and any(c[1]=='/' and c[2] is not None for c in candidates):continue
+        if path=='/' and source is None and any(c[1]=='/' and c[2] is not None for c in candidates):continue
         paths.add(path)
         if source is not None:seen.add(source)
         row={'label':label,'path':path,'kind':kind,'mounted':True,'totalBytes':None,'usedBytes':None,'availableBytes':None}
@@ -307,10 +308,21 @@ def failed_units(user=False):
     except (OSError,ValueError,subprocess.TimeoutExpired):return None
 
 def collect_health(sample_interval=0.4):
-    cpu_before=cpu_frame(text_value(PROC/'stat',''))
+    raw_before=text_value(PROC/'stat','')
+    cpu_before=cpu_frame(raw_before)
     net_before=net_frame();disk_before=disk_frame();began=time.monotonic()
     time.sleep(sample_interval)
-    cpu_after=cpu_frame(text_value(PROC/'stat',''))
+    raw_after=text_value(PROC/'stat','')
+    cpu_after=cpu_frame(raw_after)
+    cores=[]
+    before_cores={line.split()[0]:line for line in raw_before.splitlines() if re.match(r'^cpu[0-9]+ ',line)}
+    for line in raw_after.splitlines():
+        name=line.split()[0] if line.split() else ''
+        if name in before_cores and len(cores)<64:
+            try: value,_=cpu_usage(cpu_frame(before_cores[name]),cpu_frame(line))
+            except (ValueError,IndexError): value=None
+            frequency=number_value(SYS/'devices/system/cpu'/name/'cpufreq/scaling_cur_freq',1000)
+            cores.append({'name':name,'utilisationPercent':value,'frequencyMHz':frequency if frequency is not None and frequency>0 else None})
     net_after=net_frame();disk_after=disk_frame();elapsed=time.monotonic()-began
     cpu_percent_value,iowait=cpu_usage(cpu_before,cpu_after)
     memory=memory_values(text_value(PROC/'meminfo',''))
@@ -344,24 +356,306 @@ def collect_health(sample_interval=0.4):
     os_name='Linux'
     for line in text_value('/etc/os-release','').splitlines():
         if line.startswith('PRETTY_NAME='):os_name=line.split('=',1)[1].strip('"')
-    return {'protocol':1,'kind':'health','host':os.uname().nodename,
+    return {'capabilities':{'watches':1,'jobs':1},'protocol':1,'kind':'health','host':os.uname().nodename,
         'sampledAt':datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00','Z'),
         'sampleSeconds':round(elapsed,3),'uptimeSeconds':float(text_value(PROC/'uptime','0').split()[0]),
         'osName':os_name,'kernel':os.uname().release,'load':list(os.getloadavg()),
-        'cpu':{'name':cpu_name,'logicalCores':os.cpu_count(),'utilisationPercent':cpu_percent_value,'iowaitPercent':iowait,'temperatureC':cpu_temp,'temperatureLabel':cpu_label},
+        'cpu':{'cores':cores,'name':cpu_name,'logicalCores':os.cpu_count(),'utilisationPercent':cpu_percent_value,'iowaitPercent':iowait,'temperatureC':cpu_temp,'temperatureCriticalC':cpu_critical,'temperatureLabel':cpu_label},
         'memory':memory,'volumes':storage,'networks':networks[:32],'disks':disks[:32],
         'temperatures':temperature,'fans':fans,'componentPower':power,'gpus':gpus(),
         'failedSystemServices':failed_units(),'failedUserServices':failed_units(True),'warnings':warnings}
 
 
+def collect_watches(command, proc=Path('/proc')):
+    """Exact identities only; PID disappearance never establishes a successful exit."""
+    tokens = command.split()[1:]
+    if not 1 <= len(tokens) <= 32:
+        raise ValueError('Watch limit')
+    boot = (proc/'sys/kernel/random/boot_id').read_text().strip()
+    rows = []
+    for token in tokens:
+        match = re.fullmatch(r'([1-9][0-9]{0,9}):([0-9]{1,20}):([0-9a-f-]{36})', token)
+        if not match:
+            raise ValueError('Invalid identity')
+        pid, start, expected_boot = match.groups()
+        state = 'ended_unknown'
+        if expected_boot == boot:
+            try:
+                current = parse_stat((proc/pid/'stat').read_text())
+                if current['startTicks'] == int(start):
+                    state = 'ended_unknown' if current['state'] in {'Z', 'X', 'x'} else 'running'
+            except (FileNotFoundError, ProcessLookupError):
+                pass
+            except (OSError, ValueError):
+                state = 'unavailable'
+        rows.append({'identity': token, 'state': state})
+    return {'protocol': 1, 'kind': 'watches', 'bootId': boot,
+            'sampledAt': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'watches': rows}
+
+
+# JOB_RUNNER_SOURCE
+# Local execution is deliberately separate from the read-only SSH protocol.
+import uuid
+import signal
+import fcntl
+import stat
+
+def job_directory():
+    directory = Path.home()/'.local/state/sentinel/jobs'
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    info = directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+        raise ValueError('Job directory must be owned by this account with mode 0700')
+    return directory
+
+def job_write(directory, record, filename=None):
+    # Random private temporary file + atomic replace; no command or output retained.
+    target = directory/(filename if filename is not None else record['id']+'.json')
+    temporary = directory/(str(uuid.uuid4())+'.tmp')
+    try:
+        with open(temporary, 'x', opener=lambda path, flags: os.open(path, flags, 0o600)) as stream:
+            json.dump(record, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+def job_alive(record, proc=Path('/proc')):
+    try:
+        current = parse_stat((proc/str(record['runnerPid'])/'stat').read_text())
+        return (proc/'sys/kernel/random/boot_id').read_text().strip() == record['bootId'] and \
+            current['startTicks'] == record['runnerStartTicks'] and current['state'] not in {'Z','X','x'}
+    except (OSError, ValueError, KeyError):
+        return False
+
+def job_records(directory):
+    result = []
+    for path in sorted(directory.glob('*.json'))[:128]:
+        try:
+            if path.is_symlink() or path.stat().st_size > 8192:
+                continue
+            record = json.loads(path.read_text())
+            if str(uuid.UUID(record['id'])) != record['id'] or path.stem != record['id']:
+                continue
+            if record['state'] not in {'running', 'succeeded', 'failed', 'timed_out', 'ended_unknown'}:
+                continue
+            if record['state'] == 'running' and not job_alive(record):
+                record.update(state='ended_unknown', exitCode=None)
+            result.append(record)
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return sorted(result, key=lambda r: r['startedMillis'], reverse=True)
+
+def read_expectations(directory):
+    path=directory/'.expectations'
+    if not path.exists(): return []
+    if path.is_symlink() or path.stat().st_size>16384: raise ValueError('Invalid expectation file')
+    rules=json.loads(path.read_text())['rules']
+    if not isinstance(rules,list) or len(rules)>32: raise ValueError('Too many expectations')
+    labels=set()
+    for rule in rules:
+        if str(uuid.UUID(rule['id']))!=rule['id']: raise ValueError('Invalid expectation identity')
+        label=rule['label']
+        if not isinstance(label,str) or not 1<=len(label)<=64 or any(not c.isprintable() for c in label) or label in labels:
+            raise ValueError('Invalid expectation label')
+        labels.add(label)
+        if not 60<=rule['intervalSeconds']<=604800 or not 0<=rule['graceSeconds']<=86400 or rule['anchorMillis']<=0:
+            raise ValueError('Invalid expectation timing')
+        success=rule.get('lastSuccessMillis')
+        if success is not None and success<rule['anchorMillis']: raise ValueError('Invalid last success')
+    return rules
+
+def evaluate_expectations(rules,records,now):
+    values=[]
+    for rule in rules:
+        successes=[r['endedMillis'] for r in records if r['label']==rule['label'] and r['state']=='succeeded'
+                   and r.get('exitCode')==0 and r.get('endedMillis') is not None and r['endedMillis']>=rule['anchorMillis']]
+        if rule.get('lastSuccessMillis') is not None: successes.append(rule['lastSuccessMillis'])
+        last=max(successes) if successes else None
+        deadline=(last or rule['anchorMillis'])+(rule['intervalSeconds']+rule['graceSeconds'])*1000
+        values.append({'id':rule['id'],'label':rule['label'],'lastSuccessMillis':last,'deadlineMillis':deadline,
+                       'state':'overdue_unknown' if now>deadline else 'within_window'})
+    return values
+
+def configure_expectation(label,interval_minutes,grace_minutes):
+    if not label or len(label)>64 or any(not c.isprintable() for c in label): raise ValueError('Invalid label')
+    interval,grace=int(interval_minutes)*60,int(grace_minutes)*60
+    if not 60<=interval<=604800 or not 0<=grace<=86400: raise ValueError('Invalid timing')
+    directory=job_directory()
+    with open(directory/'.lock','a',opener=lambda path,flags: os.open(path,flags | os.O_NOFOLLOW,0o600)) as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        rules=read_expectations(directory)
+        previous=next((r for r in rules if r['label']==label),None)
+        if previous is None and len(rules)>=32: raise ValueError('32 expectations already configured')
+        # Reconfiguration explicitly starts a fresh expectation window.
+        rule={'id':previous['id'] if previous else str(uuid.uuid4()),'label':label,'intervalSeconds':interval,
+              'graceSeconds':grace,'anchorMillis':int(time.time()*1000),'lastSuccessMillis':None}
+        rules=[r for r in rules if r['label']!=label]+[rule]
+        job_write(directory,{'rules':rules},filename='.expectations')
+    return 0
+
+def remember_expected_success(directory,record):
+    if record['state']!='succeeded': return
+    with open(directory/'.lock','a',opener=lambda path,flags: os.open(path,flags | os.O_NOFOLLOW,0o600)) as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        rules=read_expectations(directory)
+        changed=False
+        for rule in rules:
+            if rule['label']==record['label'] and record['endedMillis']>=rule['anchorMillis']:
+                rule['lastSuccessMillis']=max(rule.get('lastSuccessMillis') or 0,record['endedMillis'])
+                changed=True
+        if changed: job_write(directory,{'rules':rules},filename='.expectations')
+
+
+def collect_jobs():
+    directory = Path.home()/'.local/state/sentinel/jobs'
+    records = []
+    expectations = []
+    if directory.exists():
+        directory = job_directory()
+        now = int(time.time()*1000)
+        all_records=job_records(directory)
+        expectations=evaluate_expectations(read_expectations(directory),all_records,now)
+        # Reads do not modify state. Expiration is applied to returned history too.
+        records = [r for r in all_records
+                   if r['state']=='running' or now-r['startedMillis'] <= 7*86400000][:64]
+    # Return allowlisted metadata only. Never expose argv, stdout or stderr.
+    keys = ('id','label','state','exitCode','startedMillis','endedMillis')
+    return {'protocol':1,'kind':'jobs','jobs':[{k:r.get(k) for k in keys} for r in records],
+            'sampledAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'delivery':'direct-polling','retentionDays':7,'expectations':expectations}
+
+def run_job(label, command, timeout=None):
+    if timeout is not None and not 1<=timeout<=86400: raise ValueError("Timeout must be 1–86400 seconds")
+    if not label or len(label)>64 or any(not c.isprintable() for c in label) or not command:
+        raise ValueError('Use a printable label up to 64 characters and a command after --')
+    directory = job_directory()
+    lock_path = directory/'.lock'
+    with open(lock_path, 'a', opener=lambda path, flags: os.open(path, flags | os.O_NOFOLLOW, 0o600)) as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        records = job_records(directory)
+        if sum(r['state']=='running' for r in records) >= 32:
+            raise ValueError('32 running jobs already tracked')
+        finished = [r for r in records if r['state']!='running']
+        keep_finished = 63-sum(r['state']=='running' for r in records)
+        for old in finished[keep_finished:]:
+            (directory/(old['id']+'.json')).unlink(missing_ok=True)
+        now = int(time.time()*1000)
+        for old in records:
+            if old['state']!='running' and now-old['startedMillis']>7*86400000:
+                (directory/(old['id']+'.json')).unlink(missing_ok=True)
+        record={'id':str(uuid.uuid4()),'label':label,'state':'running','exitCode':None,
+                'startedMillis':now,'endedMillis':None,'runnerPid':os.getpid(),
+                'runnerStartTicks':parse_stat(Path('/proc/self/stat').read_text())['startTicks'],
+                'bootId':Path('/proc/sys/kernel/random/boot_id').read_text().strip()}
+        job_write(directory,record)
+    print('Sentinel job '+record['id'], file=sys.stderr, flush=True)
+    child = None
+    old_handlers = {}
+    def forward(signum, frame):
+        if child is not None:
+            try: os.killpg(child.pid, signum)
+            except ProcessLookupError: pass
+    try:
+        for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            old_handlers[signum] = signal.signal(signum, forward)
+        child = subprocess.Popen(command, start_new_session=True)
+        timed_out=False
+        try: code = child.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            timed_out=True
+            try: os.killpg(child.pid,signal.SIGTERM)
+            except ProcessLookupError: pass
+            try: code=child.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try: os.killpg(child.pid,signal.SIGKILL)
+                except ProcessLookupError: pass
+                code=child.wait()
+        record.update(state='timed_out' if timed_out else 'succeeded' if code==0 else 'failed',exitCode=code,
+                      endedMillis=int(time.time()*1000))
+    except OSError:
+        # Failure to launch is explicit; no fabricated child exit code.
+        record.update(state='failed',exitCode=None,endedMillis=int(time.time()*1000))
+        code = 127
+    finally:
+        for signum, handler in old_handlers.items(): signal.signal(signum,handler)
+        job_write(directory,record)
+        try: remember_expected_success(directory,record)
+        except (OSError,ValueError,KeyError,TypeError):
+            print('Expected-success metadata could not be updated; the job exit record is retained.',file=sys.stderr)
+    return code if code>=0 else 128-code
+
+def job_preflight(path):
+    target=Path(path).resolve(strict=True)
+    info=os.statvfs(target)
+    return {'path':str(target),'availableBytes':info.f_bavail*info.f_frsize,
+            'writable':os.access(target,os.W_OK),'sleepPolicy':'unknown',
+            'delivery':'Phone must be open; no background delivery is configured.',
+            'permissions':'Uses this account only; no sudo or sleep inhibition.'}
+
+def local_cli(arguments):
+    if len(arguments)>=5 and arguments[0]=="run-timeout" and arguments[3]=="--":
+        return run_job(arguments[1],arguments[4:],timeout=int(arguments[2]))
+    if len(arguments)>=4 and arguments[0]=='run' and arguments[2]=='--':
+        return run_job(arguments[1],arguments[3:])
+    if len(arguments)==2 and arguments[0]=='preflight':
+        print(json.dumps(job_preflight(arguments[1]))); return 0
+    if len(arguments)==4 and arguments[0]=='expect':
+        return configure_expectation(*arguments[1:])
+    if arguments==['forget-expectations']:
+        directory=job_directory()
+        with open(directory/'.lock','a',opener=lambda path,flags: os.open(path,flags | os.O_NOFOLLOW,0o600)) as lock:
+            fcntl.flock(lock,fcntl.LOCK_EX)
+            (directory/'.expectations').unlink(missing_ok=True)
+        return 0
+    if arguments==['jobs']:
+        print(json.dumps(collect_jobs())); return 0
+    if arguments==['delete-history']:
+        directory=job_directory()
+        for record in job_records(directory):
+            if record['state']!='running': (directory/(record['id']+'.json')).unlink(missing_ok=True)
+        return 0
+    print('Usage: sentinel-monitor.py run LABEL -- COMMAND [ARG...] | preflight PATH | jobs | delete-history | expect LABEL INTERVAL_MIN GRACE_MIN | forget-expectations',file=sys.stderr)
+    return 64
+
+
+def service_detail(command):
+    match=re.fullmatch(r'sentinel-service-v1 (system|user) ([A-Za-z0-9_.@:-]{1,160}\.service)',command)
+    if match is None: raise ValueError('Invalid service request')
+    scope,unit=match.groups()
+    args=['/usr/bin/journalctl']+(['--user'] if scope=='user' else [])+['-b','-u',unit,'-n','40','--no-pager','-o','short-iso']
+    try:
+        process=subprocess.run(args,capture_output=True,text=True,timeout=2,env={'PATH':'/usr/bin','LANG':'C','XDG_RUNTIME_DIR':f'/run/user/{os.getuid()}'})
+        detail=process.stdout[:8000] if process.returncode==0 else 'Journal permission denied or unit journal unavailable.'
+        detail=''.join(c for c in detail if c.isprintable() or c in '\n\t')
+    except (OSError,subprocess.TimeoutExpired): detail='Journal query unavailable or timed out.'
+    return {'protocol':1,'kind':'service','unit':unit,'scope':scope,'detail':detail or 'No journal entries visible to this account.'}
+
+
 def main():
+    if "SSH_ORIGINAL_COMMAND" not in os.environ and len(sys.argv)>1:
+        try: return local_cli(sys.argv[1:])
+        except (OSError, ValueError):
+            print("Sentinel could not access private job state or validate the request.",file=sys.stderr)
+            return 65
     command = os.environ.get("SSH_ORIGINAL_COMMAND", "")
-    if command == "sentinel-status-v1":
+    if command.startswith("sentinel-service-v1 "):
+        try: result=service_detail(command)
+        except ValueError: return 64
+    elif command.startswith("sentinel-watches-v1 "):
+        try: result = collect_watches(command)
+        except ValueError: return 64
+    elif command == "sentinel-jobs-v1":
+        result = collect_jobs()
+    elif command == "sentinel-status-v1":
         result = collect()
     elif command.startswith("sentinel-processes-v2 "):
         try:uid,sort,scope=parse_process_request(command)
         except ValueError:return 64
         result={"protocol":2,"kind":"processes","host":os.uname().nodename,
+                "capabilities":{"watches":1,"jobs":1},
+                "bootId": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
                 "sampledAt":datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00','Z'),
                 **collect_processes(uid,sort=sort,scope=scope)}
     elif command == "sentinel-health-v1":

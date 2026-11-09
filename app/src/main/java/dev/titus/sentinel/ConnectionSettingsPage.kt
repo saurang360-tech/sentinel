@@ -1,11 +1,16 @@
 package dev.titus.sentinel
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.semantics.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import android.content.ClipboardManager
@@ -27,67 +32,89 @@ import dev.titus.sentinel.monitor.*
     var feedback by remember { mutableStateOf("") }
     var keyFeedback by remember { mutableStateOf("") }
     val clipboard=LocalContext.current.getSystemService(ClipboardManager::class.java)
+    var step by remember { mutableIntStateOf(0) }
+    var submitted by remember { mutableStateOf(false) }
+    val draft=ConnectionSettings(host.trim().removeSurrounding("[","]"),port.toIntOrNull() ?: 0,user.trim(),fingerprint.trim(),deviceName.trim())
+    val stepTop=remember { BringIntoViewRequester() }
+    LaunchedEffect(step) { androidx.compose.runtime.withFrameNanos { };stepTop.bringIntoView() }
+    val validation=draft.validationError()
+    val validPin="SHA256:"+"A".repeat(43)
+    val hostError=draft.copy(port=22,username="user",fingerprint=validPin,deviceName="").validationError()
+    val userError=draft.copy(host="example.com",port=22,fingerprint=validPin,deviceName="").validationError()
+    val pinError=draft.copy(host="example.com",port=22,username="user",deviceName="").validationError()
+    val nameError=draft.copy(host="example.com",port=22,username="user",fingerprint=validPin).validationError()
     if(profiles.isNotEmpty()) {
         Disclosure("Saved PCs & logins") {
             profiles.forEach { profile ->
-                OutlinedButton(onClick={ feedback=selectProfile(profile.id) ?: "Saved connection selected." },modifier=Modifier.fillMaxWidth()) {
-                    Text(profile.settings.deviceName.ifBlank { profile.settings.host }+" · "+profile.settings.username)
+                OutlinedButton(shape=RoundedCornerShape(4.dp),onClick={ feedback=selectProfile(profile.id) ?: "Saved connection selected.";submitted=false },modifier=Modifier.fillMaxWidth()) {
+                    Text((if(profile.settings==config) "✓ " else "")+profile.settings.deviceName.ifBlank { profile.settings.host }+" · "+profile.settings.username)
                 }
             }
-            Note("Each host, port and SSH login is remembered separately after Save connection. Existing phone keys stay in Android Keystore; authorise them once for each PC account. Sentinel does not store SSH passwords.")
+            Note("Each PC and SSH login is saved separately. Phone keys are kept in Android Keystore.")
         }
         Spacer(Modifier.height(12.dp))
     }
-    SurfaceCard {
-        Eyebrow("CONNECTION")
-        Spacer(Modifier.height(8.dp))
-        Note("Connect over Tailscale or your private network. The PC needs Linux, SSH and the Sentinel helper.")
-        Spacer(Modifier.height(14.dp))
-        OutlinedTextField(deviceName,{ deviceName=it;feedback="" },label={ Text("Device name (optional)") },singleLine=true,modifier=Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(host,{ host=it; feedback="" },label={ Text("Hostname or IP address") },singleLine=true,modifier=Modifier.fillMaxWidth(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Uri))
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(port,{ port=it; feedback="" },label={ Text("SSH port") },singleLine=true,modifier=Modifier.fillMaxWidth(),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(user,{ user=it; feedback="" },label={ Text("SSH login") },singleLine=true,modifier=Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(fingerprint,{ fingerprint=it; feedback="" },label={ Text("Host fingerprint") },modifier=Modifier.fillMaxWidth(),minLines=2)
-        Spacer(Modifier.height(8.dp))
-        Note("Verify a changed fingerprint independently before saving. A mismatch blocks the connection.")
-        Spacer(Modifier.height(14.dp))
-        Button(onClick={ feedback=save(ConnectionSettings(host.trim().removeSurrounding("[","]"),port.toIntOrNull() ?: 0,user.trim(),fingerprint.trim(),deviceName.trim())) ?: "Connection saved." },modifier=Modifier.fillMaxWidth(),enabled=!status.busy && publicKey.isNotEmpty()) { Text("Save connection") }
-        if(feedback.isNotEmpty()) { Spacer(Modifier.height(8.dp)); Note(feedback) }
-    }
-    Spacer(Modifier.height(12.dp))
-    SetupGuide(publicKey)
-    Spacer(Modifier.height(12.dp))
-    Disclosure("Security & pairing") {
-
-        Note("Install the Sentinel helper on the PC, then authorise this public key with its read-only forced command. Keys from other apps are not imported.")
-        Spacer(Modifier.height(16.dp))
-        Eyebrow("THIS PHONE’S PUBLIC KEY")
-        Spacer(Modifier.height(8.dp))
-        Note("The private key stays securely on this phone.")
-        Spacer(Modifier.height(12.dp))
-        if(publicKey.isEmpty()) Note("Opening device key…") else {
-            SelectionContainer { Text(publicKey,fontFamily=FontFamily.Monospace,fontSize=10.sp) }
-            Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick={ clipboard.setPrimaryClip(ClipData.newPlainText("Sentinel public key",publicKey)); keyFeedback="Public key copied." },modifier=Modifier.fillMaxWidth()) { Text("Copy public key") }
-            if(keyFeedback.isNotEmpty()) Note(keyFeedback)
+    Box(Modifier.fillMaxWidth().height(1.dp).bringIntoViewRequester(stepTop))
+    Note("Three steps to connect your Linux PC. Use your existing private network or VPN; Sentinel does not configure it.")
+    Spacer(Modifier.height(8.dp))
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+        listOf("Connection","Pair phone","Verify").forEachIndexed { index,label ->
+            FilterChip(selected=step==index,onClick={ step=index },label={ Text("${index+1}. $label") },modifier=Modifier.heightIn(min=48.dp))
         }
     }
     Spacer(Modifier.height(12.dp))
-    SurfaceCard {
-        Eyebrow("CONNECTION TEST")
-        Spacer(Modifier.height(10.dp))
-        Text(statusLabel(status.phase),fontSize=16.sp)
-        if(status.phase!=Phase.Online) { Spacer(Modifier.height(7.dp)); Note(statusMessage(status.phase)) }
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick=check,enabled=!status.busy && publicKey.isNotEmpty(),modifier=Modifier.fillMaxWidth()) { Text(if(status.busy) "Checking…" else "Test connection") }
+    when(step) {
+        0 -> SurfaceCard {
+            Eyebrow("STEP 1 OF 3")
+            Spacer(Modifier.height(8.dp));Text("Connection details",style=MaterialTheme.typography.titleLarge)
+            Note("Use the SSH login and host fingerprint supplied by your PC administrator.")
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(deviceName,{ deviceName=it;feedback="" },label={ Text("Device name (optional)") },singleLine=true,modifier=Modifier.fillMaxWidth(),isError=submitted && nameError!=null,
+                supportingText={ if(submitted && nameError!=null) Text(nameError) })
+            OutlinedTextField(host,{ host=it;feedback="" },label={ Text("Hostname or IP address") },singleLine=true,modifier=Modifier.fillMaxWidth(),isError=submitted && hostError!=null,
+                supportingText={ Text(if(submitted && hostError!=null) hostError else "For example: workstation.local or 192.168.1.20") },keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Uri))
+            OutlinedTextField(port,{ port=it;feedback="" },label={ Text("SSH port") },singleLine=true,modifier=Modifier.fillMaxWidth(),isError=submitted && draft.port !in 1..65535,
+                supportingText={ if(submitted && draft.port !in 1..65535) Text("Enter a port from 1 to 65535.") },keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
+            OutlinedTextField(user,{ user=it;feedback="" },label={ Text("SSH login") },singleLine=true,modifier=Modifier.fillMaxWidth(),isError=submitted && userError!=null,
+                supportingText={ if(submitted && userError!=null) Text(userError) })
+            OutlinedTextField(fingerprint,{ fingerprint=it;feedback="" },label={ Text("Verified host fingerprint") },modifier=Modifier.fillMaxWidth(),minLines=2,isError=submitted && pinError!=null,
+                supportingText={ Text(if(submitted && pinError!=null) pinError else "Starts with SHA256:. Verify independently on your PC.") })
+            Note("A changed fingerprint blocks access. Verify it independently before saving a replacement.")
+            Spacer(Modifier.height(12.dp))
+            Button(shape=RoundedCornerShape(4.dp),onClick={ submitted=true;if(validation==null) step=1 },modifier=Modifier.fillMaxWidth()) { Text("Continue to pairing") }
+        }
+        1 -> {
+            SurfaceCard {
+                Eyebrow("STEP 2 OF 3");Spacer(Modifier.height(8.dp));Text("Pair this phone",style=MaterialTheme.typography.titleLarge)
+                Note("The monitoring key must use the restricted helper command. The private key stays on this phone.")
+                Spacer(Modifier.height(12.dp))
+                if(publicKey.isBlank()) Note("Opening phone key…") else {
+                    OutlinedButton(shape=RoundedCornerShape(4.dp),onClick={ clipboard.setPrimaryClip(ClipData.newPlainText("Sentinel public key",publicKey));keyFeedback="Monitoring public key copied." },modifier=Modifier.fillMaxWidth()) { Text("Copy monitoring public key") }
+                    Disclosure("View public key") { SelectionContainer { Text(publicKey,fontFamily=FontFamily.Monospace,fontSize=16.sp) } }
+                }
+                if(keyFeedback.isNotBlank()) Note(keyFeedback)
+            }
+            Spacer(Modifier.height(12.dp));SetupGuide(publicKey,initiallyExpanded=true)
+            Spacer(Modifier.height(12.dp))
+            Button(shape=RoundedCornerShape(4.dp),onClick={ step=2 },modifier=Modifier.fillMaxWidth()) { Text("Continue to verification") }
+        }
+        2 -> SurfaceCard {
+            Eyebrow("STEP 3 OF 3");Spacer(Modifier.height(8.dp));Text("Save & verify",style=MaterialTheme.typography.titleLarge)
+            PairLine("PC",draft.deviceName.ifBlank { draft.host.ifBlank { "Not entered" } })
+            PairLine("SSH login",draft.username.ifBlank { "Not entered" })
+            if(validation!=null) { Text(validation,color=Danger);TextButton(onClick={ step=0;submitted=true }) { Text("Fix connection details") } }
+            Button(shape=RoundedCornerShape(4.dp),onClick={ feedback=save(draft) ?: "Connection saved. Test it below." },modifier=Modifier.fillMaxWidth(),enabled=validation==null && !status.busy && publicKey.isNotBlank()) { Text("Save connection") }
+            if(feedback.isNotBlank()) Text(feedback,modifier=Modifier.semantics { liveRegion=LiveRegionMode.Polite })
+            Spacer(Modifier.height(12.dp))
+            SampleBar(status.phase,status.busy,status.lastContactMillis,check,refreshEnabled=config.validationError()==null && config==draft)
+            OutlinedButton(shape=RoundedCornerShape(4.dp),onClick=check,enabled=!status.busy && config.validationError()==null && config==draft,modifier=Modifier.fillMaxWidth()) { Text(if(status.busy) "Testing…" else "Test saved connection") }
+            if(config!=draft) Note("Save your changes before testing. The test uses the selected saved connection.")
+            if(status.phase==Phase.Online && config==draft) Text("✓ Monitoring connection verified",color=Accent)
+            else Note("If pairing fails, review the restricted key entry and helper installation in Step 2.")
+        }
     }
     Spacer(Modifier.height(12.dp))
-    SurfaceCard {
-        Eyebrow("PC USERS")
+    Disclosure("Discovered PC users") {
         Spacer(Modifier.height(8.dp))
         if(users.isEmpty()) Note("Test the saved connection to discover local login accounts. User discovery requires the current Sentinel helper.")
         else users.forEach { PairLine(it.name,"UID ${it.uid}") }
@@ -99,8 +126,8 @@ import dev.titus.sentinel.monitor.*
         Note("Terminal uses a separate key with interactive shell access. Monitoring keeps its read-only key. Authorise this terminal key on the PC before connecting.")
         Spacer(Modifier.height(12.dp))
         if(terminalPublicKey.isBlank()) Note("Opening terminal key…") else {
-            SelectionContainer { Text(terminalPublicKey,fontFamily=FontFamily.Monospace,fontSize=10.sp) }
-            OutlinedButton(onClick={ clipboard.setPrimaryClip(ClipData.newPlainText("Sentinel terminal public key",terminalPublicKey));keyFeedback="Terminal public key copied." }) { Text("Copy terminal key") }
+            SelectionContainer { Text(terminalPublicKey,fontFamily=FontFamily.Monospace,fontSize=16.sp) }
+            OutlinedButton(shape=RoundedCornerShape(4.dp),onClick={ clipboard.setPrimaryClip(ClipData.newPlainText("Sentinel terminal public key",terminalPublicKey));keyFeedback="Terminal public key copied." }) { Text("Copy terminal key") }
             if(keyFeedback.isNotBlank()) Note(keyFeedback)
         }
     }
@@ -109,7 +136,7 @@ import dev.titus.sentinel.monitor.*
         Note("Uses the same SSH access already authorised for Terminal. No PC helper, new PC key, sudo rule, service or download is added. Every shutdown asks for the PC account’s administrator (sudo) password. It is masked, sent only over verified SSH and never saved.")
         Spacer(Modifier.height(10.dp))
         Note("The account must already have sudo permission. Authentication failures and shutdown inhibitors are reported; no sudo policy is changed. Shutdown respects blocking inhibitors and affects every user.")
-        OutlinedButton(onClick=checkPower,enabled=!powerUi.busy) { Text("Verify PC authentication — no shutdown") }
+        OutlinedButton(shape=RoundedCornerShape(4.dp),onClick=checkPower,enabled=!powerUi.busy) { Text("Verify PC authentication — no shutdown") }
         if(powerUi.message.isNotBlank()) Note(powerUi.message)
     }
     Spacer(Modifier.height(12.dp))

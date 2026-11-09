@@ -1,5 +1,6 @@
 package dev.titus.sentinel
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@Composable internal fun SetupGuide(publicKey: String) {
+@Composable internal fun SetupGuide(publicKey: String, initiallyExpanded: Boolean=false) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
     var feedback by remember { mutableStateOf("") }
@@ -29,10 +30,10 @@ import kotlinx.coroutines.withContext
             }
         }
     }
-    Disclosure("Set up a Linux PC") {
+    Disclosure("Install helper & authorise phone",initiallyExpanded) {
         Note("1. Use your existing LAN or VPN route and SSH service. Sentinel does not configure networking or install services. You need Python 3 on the PC and administrator help to install its read-only helper.")
         Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick={ export.launch("sentinel-monitor.py") },modifier=Modifier.fillMaxWidth()) { Text("Save Linux helper") }
+        OutlinedButton(shape=RoundedCornerShape(4.dp),onClick={ export.launch("sentinel-monitor.py") },modifier=Modifier.fillMaxWidth()) { Text("Save Linux helper") }
         if(feedback.isNotBlank()) Note(feedback)
         Note("2. Review and transfer the helper to the PC. An administrator should install it as /usr/local/libexec/sentinel-monitor.py, owned by root and not writable by the SSH login. Verify the Python path and SELinux context on your distribution.")
         Spacer(Modifier.height(10.dp))
@@ -46,7 +47,7 @@ import kotlinx.coroutines.withContext
         Spacer(Modifier.height(10.dp))
         Note("An optional from= restriction can limit the key to your phone’s stable VPN address. Use the real address for your setup. The helper runs with the SSH account’s existing permissions and never needs sudo rights.")
         Spacer(Modifier.height(10.dp))
-        Note("5. Enter the connection and verified fingerprint above, save, then test. CPU/RAM sorting and user discovery require this compatible helper. Unsupported sensors stay unavailable. Only local login accounts are discovered; directory accounts may be absent.")
+        Note("5. Enter the connection and verified fingerprint above, save, then test. CPU/RAM sorting, task identity checks and job results require this compatible helper. The SSH protocol remains read-only. Optional job execution must be started locally on the PC. Unsupported sensors stay unavailable. Only local login accounts are discovered; directory accounts may be absent.")
         Spacer(Modifier.height(10.dp))
         Note("Optional terminal: authorising the separate terminal key permits commands with your login’s normal privileges. Ask your administrator to authorise it with restrict,pty and your configured login shell; keep forwarding disabled. Do not reuse the read-only monitoring entry. This app provides a basic shell, not remote desktop or Kitty mirroring.")
         Spacer(Modifier.height(10.dp))

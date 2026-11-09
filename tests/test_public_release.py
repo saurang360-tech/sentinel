@@ -24,7 +24,7 @@ class PublicReleaseTest(unittest.TestCase):
 
     def test_public_helper_advertises_generic_discovery_and_sorting(self):
         status = helper.collect()
-        self.assertEqual(status['capabilities'], {'processes': 2, 'users': 1})
+        self.assertEqual(status['capabilities'], {'processes': 2, 'users': 1, 'watches': 1, 'jobs': 1})
         self.assertEqual(helper.parse_process_request('sentinel-processes-v2 1001 ram user'),
                          (1001, 'ram', 'user'))
         source = HELPER.read_text()

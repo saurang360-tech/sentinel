@@ -1,0 +1,15 @@
+Local Android unit tests: 21; failures: 0
+Python tests: 32 passed.
+Gradle assembleDebug, testDebugUnitTest, lintDebug, assembleDebugAndroidTest: passed.
+Lint: no errors; existing dependency/resource warnings remain.
+Final preview APK installed on Pixel 9a with adb install -r; existing data retained.
+No real-PC SSH integration, helper replacement, background delivery, power actions, or release upload performed.
+The initial storage test failed due to instrumentation package context; corrected to an isolated target-UID preferences namespace.
+Latest device instrumentation output:
+
+dev.titus.sentinel.monitor.TaskWatchProtocolTest:...
+dev.titus.sentinel.monitor.RedesignNavigationTest:....
+
+Time: 29.695
+
+OK (7 tests)

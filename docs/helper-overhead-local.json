@@ -1,0 +1,90 @@
+{
+  "samples": [
+    {
+      "request": "sentinel-status-v1",
+      "elapsedSeconds": 0.0553,
+      "cpuSeconds": 0.0493,
+      "responseBytes": 298,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-status-v1",
+      "elapsedSeconds": 0.0494,
+      "cpuSeconds": 0.0457,
+      "responseBytes": 297,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-status-v1",
+      "elapsedSeconds": 0.0487,
+      "cpuSeconds": 0.0447,
+      "responseBytes": 298,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-processes-v2 all cpu user",
+      "elapsedSeconds": 0.447,
+      "cpuSeconds": 0.0456,
+      "responseBytes": 1005,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-processes-v2 all cpu user",
+      "elapsedSeconds": 0.4473,
+      "cpuSeconds": 0.0447,
+      "responseBytes": 1005,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-processes-v2 all cpu user",
+      "elapsedSeconds": 0.4494,
+      "cpuSeconds": 0.0482,
+      "responseBytes": 1005,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-health-v1",
+      "elapsedSeconds": 0.4587,
+      "cpuSeconds": 0.0543,
+      "responseBytes": 2443,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-health-v1",
+      "elapsedSeconds": 0.4574,
+      "cpuSeconds": 0.0563,
+      "responseBytes": 2441,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-health-v1",
+      "elapsedSeconds": 0.4543,
+      "cpuSeconds": 0.0525,
+      "responseBytes": 2440,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-jobs-v1",
+      "elapsedSeconds": 0.0418,
+      "cpuSeconds": 0.041,
+      "responseBytes": 138,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-jobs-v1",
+      "elapsedSeconds": 0.0482,
+      "cpuSeconds": 0.0418,
+      "responseBytes": 138,
+      "exitCode": 0
+    },
+    {
+      "request": "sentinel-jobs-v1",
+      "elapsedSeconds": 0.0456,
+      "cpuSeconds": 0.0445,
+      "responseBytes": 138,
+      "exitCode": 0
+    }
+  ],
+  "peakChildRssKiB": 16364,
+  "note": "Local helper only. Excludes SSH, phone, network and representative-device verification."
+}

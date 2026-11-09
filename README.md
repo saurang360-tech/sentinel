@@ -3,21 +3,37 @@
 Android companion for monitoring your Linux PC over an existing SSH route,
 built with Kotlin/Jetpack Compose through Android Studio and its MCP server.
 
+The default workspace is Home, Users, Terminal, Power and Settings; Home keeps
+status, CPU, RAM, network/disk plots and storage. Advanced controls and detailed metrics are optional widgets
+under Edit > Add widget; Settings > Add preset creates editable preset tabs. Headers use one or two words, and explanatory text is
+removed from the home feed. Layouts remain customizable with swipe navigation
+and persistent drag/resize controls. Nord, monochrome and compact Amber themes
+are available in Settings. The app has no demo mode.
+See [workspace behavior and setup limits](docs/WIDGET-WORKSPACE.md).
+
 Version 0.10.0 provides foreground system status, health readings and processes
 with CPU/RAM sorting and local-user filters. Optional basic SSH terminal access
 uses a separately authorised key. Hardware/permission limitations remain visible.
 Shutdown uses existing Terminal SSH access and asks for the PC sudo password for
 each action; it is never stored. No additional PC software or permissions are
-installed. Existing sudo rights are required. Continuous background alerts and
-task-completion tracking remain proposed future work.
+installed. Existing sudo rights are required. Foreground process watching and opt-in verified CLI job results are now available
+through simple test controls. An optional explicitly started foreground-service session now checks task outcomes
+while the app is backgrounded, with deduplicated Android notification handoffs.
+It is best effort and stops on process death or phone restart; no cloud relay is configured.
+Alert controls now include per-task mute, severity, quiet hours and cooldowns;
+opt-in sustained health warnings and PC-configured expected-success deadlines are
+available. See [alert and assurance details](docs/ALERTS-HEALTH-ASSURANCE.md).
+See [functionality implementation and limitations](docs/FUNCTIONALITY-ROADMAP-IMPLEMENTATION.md).
 
 Connections go directly to the configured PC. There is no developer backend,
 analytics, advertising or account system. Settings remain on the phone; live
-readings and terminal output are memory-only. Android backup is disabled.
+readings and terminal output are memory-only. Explicit process watches and their
+bounded history are encrypted on the phone until deleted. Optional runner job
+metadata is retained privately on the PC for up to 7 days (see implementation notes). Android backup is disabled.
 Saved profiles are encrypted and protected by phone fingerprint/screen-lock
 verification; shutdown separately asks for PC authentication.
 First use shows privacy/terms information before connecting; Android 17+ requests
-local-network permission. Demo and legal text work without a PC connection.
+local-network permission. Legal text works without a PC connection.
 
 The PC requires SSH, Python 3 and administrator-reviewed installation/pairing of
 the helper bundled at `app/src/main/assets/sentinel-monitor.py`. Settings can

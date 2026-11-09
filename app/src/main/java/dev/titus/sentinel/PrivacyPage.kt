@@ -1,5 +1,6 @@
 package dev.titus.sentinel
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
@@ -39,13 +40,12 @@ import dev.titus.sentinel.monitor.AppAccess
     }) { document=null } }
 }
 
-@Composable internal fun AccessGate(content: @Composable () -> Unit, demoContent: @Composable (() -> Unit) -> Unit) {
+@Composable internal fun AccessGate(content: @Composable () -> Unit) {
     val context=LocalContext.current
     var acknowledged by remember { mutableStateOf(AppAccess.acknowledged(context)) }
     var allowed by remember { mutableStateOf(AppAccess.networkGranted(context)) }
     var requested by remember { mutableStateOf(false) }
     var acceptedTerms by remember { mutableStateOf(false) }
-    var demo by remember { mutableStateOf(false) }
     val launcher=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { allowed=it;requested=true }
     val owner=LocalLifecycleOwner.current
     DisposableEffect(owner) {
@@ -55,27 +55,27 @@ import dev.titus.sentinel.monitor.AppAccess
         owner.lifecycle.addObserver(observer)
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
-    if(demo) { demoContent { demo=false };return }
     if(acknowledged && allowed) { content();return }
-    MaterialTheme(colorScheme=darkColorScheme()) {
+    SentinelTheme {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.safeDrawingPadding().padding(24.dp).verticalScroll(rememberScrollState())) {
-                Text(if(!acknowledged) "Welcome to Sentinel" else "Connect to your PC",style=MaterialTheme.typography.headlineMedium)
+                Eyebrow("PRIVATE PC MONITORING")
+                Spacer(Modifier.height(12.dp))
+                Text(if(!acknowledged) "Your workstation.\nWithin reach." else "Connect to your PC",style=MaterialTheme.typography.headlineLarge)
                 Spacer(Modifier.height(20.dp))
                 Text("Monitor your Linux PC over your existing SSH connection. A compatible Sentinel helper is required on the PC. Terminal access is optional and uses a separate key.")
                 Spacer(Modifier.height(16.dp))
                 Text("Your data stays between your phone and the PC you configure. Sentinel has no developer backend, accounts, advertising, analytics or automatic crash reporting. It does not scan your network.")
                 Spacer(Modifier.height(16.dp))
-                Text("Connection settings are saved on this phone. Live readings and terminal output stay in memory. SSH sends your login, public key and requests to your PC; terminal commands may change files or settings and may be recorded by your PC.")
+                Text("Connection settings are saved on this phone. Live readings and terminal output stay in memory. Selected process watches and up to 20 state changes per watch are encrypted on this phone until deleted; opt-in PC jobs retain labels and exit results on the PC for up to 7 days. An optional background monitoring session keeps connection details in memory while locked and shows task notifications. Only hashed notification receipts are saved outside the encrypted vault. SSH sends your login, public key and requests to your PC; terminal commands may change files or settings and may be recorded by your PC.")
                 PrivacyLinks()
-                TextButton(onClick={ demo=true }) { Text("Explore demo — no connection") }
                 if(!acknowledged) {
                     Row { Checkbox(acceptedTerms,{ acceptedTerms=it });Text("I have read the privacy notice and agree to the terms of use.",Modifier.padding(top=12.dp)) }
-                    Button(onClick={ AppAccess.acknowledge(context);acknowledged=true },enabled=acceptedTerms) { Text("Continue") }
+                    Button(shape=RoundedCornerShape(4.dp),onClick={ AppAccess.acknowledge(context);acknowledged=true },enabled=acceptedTerms,modifier=Modifier.fillMaxWidth()) { Text("Continue") }
                 } else {
                     Spacer(Modifier.height(16.dp))
                     Text("Android requires nearby-device permission for local-network SSH connections on this version. Sentinel uses it only to reach your configured PC. It does not access contacts, photos, microphone or location.")
-                    Button(onClick={ launcher.launch(AppAccess.LOCAL_NETWORK) }) { Text("Allow PC connection") }
+                    Button(shape=RoundedCornerShape(4.dp),onClick={ launcher.launch(AppAccess.LOCAL_NETWORK) },modifier=Modifier.fillMaxWidth()) { Text("Allow PC connection") }
                     if(requested) {
                         Text("Access was not granted. You can try again or change the permission in Android Settings.")
                         TextButton(onClick={ context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:${context.packageName}"))) }) { Text("Open Android Settings") }
@@ -95,7 +95,7 @@ import dev.titus.sentinel.monitor.AppAccess
         Spacer(Modifier.height(8.dp))
         Note("No developer data collection, ads or analytics. Settings stay on this phone; live readings and terminal output are memory-only. Android app backup is disabled.")
         PrivacyLinks()
-        OutlinedButton(onClick={ confirm=true },modifier=Modifier.fillMaxWidth()) { Text("Erase local app data") }
+        OutlinedButton(shape=RoundedCornerShape(4.dp),onClick={ confirm=true },modifier=Modifier.fillMaxWidth()) { Text("Erase local app data") }
         Note("To revoke PC access, remove this phone’s Sentinel public keys from the PC’s authorised-key file. Erasing the phone does not edit your PC.")
         if(eraseError.isNotBlank()) Text(eraseError)
     }
