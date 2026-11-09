@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Live Processes — Sentinel 0.4-processes
 
 The fourth tab is now Processes. It replaces all illustrative application rows with authenticated process metadata from Titus over the existing Tailscale SSH connection. Browser tabs are excluded. Health and Details remain explicitly labelled demo pages; Power remains live.

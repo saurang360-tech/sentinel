@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Sentinel visual and UX redesign
 
 The approved nine-point redesign keeps the native Compose architecture and SSH

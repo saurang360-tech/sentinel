@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Sentinel: portability and Play Store readiness review
 
 Reviewed 6 November 2026. Scope: current Android source, staged helper/setup code, installed helper checksum and contents, packaged Sentinel 0.8.0 APK, and current official Play documentation. This is a static portability/release review plus artifact inspection, not a new cross-device test campaign or a complete penetration test. No application code, PC authentication, network settings or installed software was changed.

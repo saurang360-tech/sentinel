@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Sentinel 0.9.0 public-release preparation
 
 Implemented and checked on 6 November 2026. This is a tested release candidate;

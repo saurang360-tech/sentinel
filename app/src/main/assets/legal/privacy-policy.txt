@@ -127,13 +127,14 @@ Device verification and power actions
 Sentinel requires phone fingerprint or screen-lock verification only to reveal
 saved connection settings or terminal details. Opening the app, monitoring and
 shutdown do not require phone verification. Shutdown requires the PC sudo
-password entered fresh for each request. Android handles
-that verification; Sentinel never receives your phone PIN or biometric template.
+password entered fresh for each request. Android handles phone verification;
+Sentinel never receives your phone PIN or biometric template. A secure phone
+screen lock is required to reveal saved connection settings and terminal details.
 USE_BIOMETRIC enables the system verification prompt. Screenshots and recent-app
 previews of the app are blocked. Host/port/login profiles are encrypted in private
 phone storage with an Android Keystore AES-GCM key and remembered separately.
 
-Shutdown uses the existing Terminal SSH key and your PC account's existing sudo
+Shutdown and reboot use the existing Terminal SSH key and your PC account's existing sudo
 permissions. Each request asks for the PC administrator password in a masked field.
 This is the PC password, not your phone PIN. It is held only for that request, sent
 only to the fingerprint-verified SSH host when its sudo prompt is received, and
@@ -142,9 +143,9 @@ service. Raw authentication output is not displayed. Your PC/PAM may independent
 record authentication attempts under its existing logging policy.
 
 The app first verifies PC administrator authentication without a power command.
-Only an explicitly confirmed shutdown proceeds to a fixed systemctl command,
+Only an explicitly armed power action proceeds to a fixed systemctl command,
 respecting blocking inhibitors and existing sudo rights. The separate verification
-check cannot request shutdown. Password retries and shutdown retries are not
+check cannot request shutdown or reboot. Password retries and shutdown retries are not
 automatic. All PC users and running work can be affected; a lost reply is reported
 as uncertain. No new PC helper, software download, sudoers/polkit rule, SSH key
 authorisation, service or network change is made for shutdown. Existing monitoring

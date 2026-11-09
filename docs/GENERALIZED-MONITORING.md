@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Generalized Linux monitoring — 0.7.0
 
 Settings configures one Linux PC at a time: optional display name, hostname/MagicDNS or IPv4/IPv6, SSH port/login and independently verified host fingerprint. Fresh installations start without personal connection defaults. Saved configurations remain; pre-0.7 installations that relied on implicit defaults retain their connection only when a previous sample exists. Device identity remains in Android Keystore. No private keys are imported. Strict pinning and public-key-only authentication remain in place, with supported modern SSH algorithm defaults for different servers.

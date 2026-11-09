@@ -14,10 +14,11 @@ See [workspace behavior and setup limits](docs/WIDGET-WORKSPACE.md).
 Version 0.10.0 provides foreground system status, health readings and processes
 with CPU/RAM sorting and local-user filters. Optional basic SSH terminal access
 uses a separately authorised key. Hardware/permission limitations remain visible.
-Shutdown uses existing Terminal SSH access and asks for the PC sudo password for
-each action; it is never stored. No additional PC software or permissions are
-installed. Existing sudo rights are required. Foreground process watching and opt-in verified CLI job results are now available
-through simple test controls. An optional explicitly started foreground-service session now checks task outcomes
+Shutdown and reboot use existing Terminal SSH access. Each requires a held
+arming control and the PC sudo password entered fresh; it is never stored. No
+phone fingerprint/PIN is required for power actions. These actions add no PC
+software or permissions; existing sudo rights and systemd are required. Foreground process watching and opt-in verified CLI job results are now available
+through optional task widgets. An optional explicitly started foreground-service session now checks task outcomes
 while the app is backgrounded, with deduplicated Android notification handoffs.
 It is best effort and stops on process death or phone restart; no cloud relay is configured.
 Alert controls now include per-task mute, severity, quiet hours and cooldowns;
@@ -31,7 +32,8 @@ readings and terminal output are memory-only. Explicit process watches and their
 bounded history are encrypted on the phone until deleted. Optional runner job
 metadata is retained privately on the PC for up to 7 days (see implementation notes). Android backup is disabled.
 Saved profiles are encrypted and protected by phone fingerprint/screen-lock
-verification; shutdown separately asks for PC authentication.
+verification. A secure phone screen lock is required to reveal connection
+settings and terminal details; power actions separately ask for PC authentication.
 First use shows privacy/terms information before connecting; Android 17+ requests
 local-network permission. Legal text works without a PC connection.
 
@@ -45,7 +47,8 @@ Open this folder in Android Studio and use Studio's bundled JDK; the system
 runtime lacks javac. Source targets API 37 and supports Android 10+.
 Run `:app:assembleDebug :app:assembleRelease :app:bundleRelease
 :app:testDebugUnitTest :app:lintDebug` through Studio/MCP.
-No new runtime dependencies were added for 0.9.
+Dependency versions are declared in app/build.gradle.kts; release lint and
+licence review remain part of each release check.
 
 Production uses `dev.titus.sentinel`; debug keeps `dev.titus.sentinel.preview`
 to preserve the paired phone installation. Production is separate and needs
@@ -53,6 +56,9 @@ its own pairing. Release signing reads ignored `release-signing.properties`;
 it never falls back to the debug certificate. Back up the newly generated
 upload key/configuration securely before publishing.
 
+- [Current readiness checks and remaining blockers](docs/RELEASE-READINESS.md)
+- [9 November Play readiness audit](docs/PLAY-READINESS-AUDIT-2026-11-09.md)
+- [Connected-phone test report (partial)](docs/PHONE-USER-TEST-REPORT-2026-11-09.md)
 - [0.10 protected connections and SSH shutdown](docs/SSH-SHUTDOWN-0.10.md)
 - [0.9 changes and verification](docs/PUBLIC-RELEASE-0.9.md)
 - [Public release gate](release/store/RELEASE-CHECKLIST.md)
@@ -64,7 +70,10 @@ upload key/configuration securely before publishing.
 - [Android Studio MCP setup](docs/ANDROID-STUDIO-MCP.md)
 
 Run `python tools/prepare_store_documents.py` to regenerate static legal HTML;
-`python tools/check_store_readiness.py` reports offline submission blockers.
+`python tools/check_store_readiness.py` reports offline submission blockers
+and writes the ignored release/store/readiness.json result. Exit code 1 means
+a check failed. Run the checker tests with
+`python -m unittest discover -s tests -p test_store_readiness.py`.
 Neither uploads anything. Publisher contact/policy hosting, independent
 compatibility testing and actual Play Console requirements remain release gates.
 No app has been submitted to Play from this workspace.

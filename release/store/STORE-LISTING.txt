@@ -1,54 +1,69 @@
+DRAFT STORE COPY — verify the final artifact and reviewer access before submission.
+Publisher/contact details and current screenshots are still required.
+
 APP NAME
 Sentinel
 
 SHORT DESCRIPTION
-Monitor your Linux PC over SSH. Check health, processes and a basic terminal.
+Monitor your Linux PC over SSH: health, processes, tasks and a basic terminal.
 
 FULL DESCRIPTION
 Check your Linux PC from your Android phone using your existing SSH connection.
-Sentinel shows system responsiveness, CPU and memory use, storage space,
-available hardware sensors and running processes. Sort processes by CPU or RAM,
-filter by local user, and include system processes when you need more detail.
+Sentinel shows system responsiveness, CPU and memory use, storage, network/disk
+rates, available sensors and processes. Sort processes by CPU or RAM and filter
+by local user. Arrange widgets in editable tabs and choose Nord, Monochrome or
+Amber themes. Sensor availability and process visibility depend on your PC.
 
-Optional terminal access opens a basic line-oriented SSH shell using a separate
-authorised key. Monitoring retains its restricted read-only key.
+Watch selected processes using boot/PID/start identity. A process disappearing
+means its outcome is unknown; it does not prove success. An optional command
+runner on the PC records the direct command's exit result. Expected-success
+rules check recorded exits; they do not schedule work or verify backup contents.
 
-Your connection goes directly to the PC you configure. There are no Sentinel
-cloud accounts, ads, analytics or developer telemetry. Connection settings stay
-on your phone; live readings and terminal output are held in memory. Theme and layout controls are available without fabricated sample readings.
+Start an optional background monitoring session with an ongoing notification
+and Stop control. Choose notification severity, quiet hours, cooldowns, task
+mute and sustained health warnings. Checks and notification delivery are best
+effort: Android, battery saving and network loss may delay them. App/process stop
+or phone restart ends the session; restart it in Sentinel. There is no cloud relay.
 
-Requirements: Android 10 or newer, a reachable Linux PC with SSH and Python 3,
-and administrator-reviewed installation of the included Sentinel helper and
-public-key authorisation. Your existing private LAN or VPN such as Tailscale can
-provide connectivity; Sentinel does not install or configure a VPN.
+Optional terminal access provides a basic SSH shell using a separate authorised
+key. It does not mirror Kitty or provide remote desktop. Monitoring retains its
+restricted read-only key. Saved PC/login profiles and macro templates are
+encrypted locally; phone verification protects saved connection settings and
+terminal details. A secure phone screen lock is required for those features.
 
-Monitoring refreshes while open. Hardware readings depend on Linux drivers and
-permissions. User discovery covers eligible local accounts, not every directory
-service. Older helpers offer limited compatibility; install the included helper
-for account discovery and sorting before the result limit. Windows/macOS hosts,
-remote desktop, Kitty mirroring, continuous background alerts and job tracking
-are not supported in this version. An unreachable PC may be asleep,
-off or disconnected; the app does not claim to distinguish those states.
+Shutdown and reboot require a held arming control and the PC account's sudo
+password, entered fresh for each request and never saved. No fingerprint or
+phone PIN is required for power actions. Existing sudo rights, systemd and the
+Terminal SSH key's existing authorisation are required. Blocking inhibitors are
+respected; there is no forced action or automatic retry. No additional PC
+software or permission change is made for power actions.
 
-REVIEWER ACCESS
-On a clean launch, review the first-use disclosure and permission flow. There
-is no demo mode. Live readings require an independently configured Linux SSH
-test host and the included helper. Do not provide access to the owner's PC.
-Without a connection the app shows missing readings explicitly. Legal documents
-remain available without a PC. Review screenshots must be refreshed for the new
-widget workspace; historical demo captures do not represent the current build.
+Your connection goes directly to the configured PC. Sentinel has no cloud
+accounts, ads, analytics or developer telemetry. Connection settings, process
+watches and their bounded history remain encrypted on the phone. Live readings
+and terminal scrollback stay in memory. Optional runner results and expected-
+success rules remain on the PC; see the privacy policy for retention/deletion.
 
-PUBLISHER TASKS
-Choose the final developer display name and public support email. Provide the
-privacy-policy URL, accurate screenshots, category/content rating, audience and
-other Play Console declarations. Confirm eligibility and any required testing
-track in the actual developer account. Do not advertise future task alerts or
-shutdown features before they are implemented and verified.
+Requirements: Android 10+, a reachable Linux PC with SSH and Python 3, and
+administrator-reviewed helper installation and public-key authorisation. Use
+an existing LAN or VPN route such as Tailscale; Sentinel does not configure a
+VPN, install a PC service or keep the PC awake. Updated helper capabilities are
+needed for newer metrics and tasks. Directory-service accounts may be absent.
+Windows/macOS hosts and guaranteed unattended monitoring are unsupported.
+An unreachable PC may be asleep, off or disconnected; Sentinel cannot prove which.
 
-0.10 ADDITION FOR FINAL LISTING
-Remember multiple PC/login profiles encrypted on your phone. Fingerprint or
-phone screen lock protects saved details. Optional shutdown uses existing SSH
-and asks for the PC account's administrator/sudo password each time; that
-password is not saved. Existing sudo permissions and systemd are required.
-No additional PC download or permission change is made for shutdown. The app
-respects blocking inhibitors and never automatically retries a power request.
+REVIEWER ACCESS — NOT COMPLETE
+There is no production demo mode. Before submission, prepare complete English
+App access instructions and a practical isolated SSH test environment covering
+helper/key pairing, secure phone lock and restricted features. Do not expose the
+owner's PC or real sudo credentials. Do not assume reviewers will provision a PC
+or join the owner's private VPN. Establish an acceptable access arrangement in
+Play Console. Legal documents are accessible without a PC connection.
+
+PUBLISHER TASKS — NOT STORE DESCRIPTION
+Choose publisher name, support email and hosted privacy URL; replace historical
+demo screenshots with actual current workspace captures from a non-personal
+test setup. Finalize Data safety, foreground-service use-case declaration/video,
+content rating, ads/audience information, signing and required testing. See
+RELEASE-CHECKLIST.md and docs/RELEASE-READINESS.md. No Play upload is performed by
+repository scripts; final review/approval cannot be inferred from this draft.

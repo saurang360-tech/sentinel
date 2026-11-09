@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sentinel — terms</title><style>body{max-width:800px;margin:40px auto;padding:0 20px;font:16px/1.6 system-ui;color:#202020;background:#fff}pre{white-space:pre-wrap;font:inherit}.draft{color:#8b3100}</style><body><p class="draft">PRE-RELEASE DRAFT: publisher details are incomplete.</p><pre>SENTINEL TERMS OF USE
-Version 3 — 6 November 2026
+Version 4 — 9 November 2026
 
 Use Sentinel only with computers you own or have explicit authorisation to
 access. You are responsible for the SSH account and permissions you choose,
@@ -14,9 +14,21 @@ unnecessary privileges or share private key material.
 
 This release supports compatible Linux PCs over an existing reachable SSH route.
 It requires a compatible Python helper on the PC. Not all sensors or accounts
-will be visible. It provides foreground monitoring and a basic line-oriented SSH
-terminal, not remote desktop, Kitty mirroring, guaranteed background alerts or
-job-completion detection. Optional power-off uses existing Terminal SSH access and the PC account’s existing shutdown permissions, plus explicit confirmation and the PC administrator password. It affects every PC user and interrupts running work.
+will be visible. It provides foreground monitoring and a basic line-oriented SSH terminal, not
+remote desktop or Kitty mirroring. Selected processes can be watched, but their
+disappearance does not prove success. Optional PC runner results verify only the
+direct command&#x27;s exit; detached children and backup contents are not verified.
+Expected-success rules do not schedule work. An explicitly started background
+session polls for task outcomes and optional sustained health warnings with an
+ongoing notification and Stop control. Android/network delays, app/process stop
+and phone restart can interrupt it; delivery is not guaranteed. Quiet hours,
+severity, mute and cooldown controls can suppress or defer notifications.
+
+Shutdown and reboot use existing Terminal SSH access, a held arming control and
+the PC account&#x27;s administrator/sudo password entered fresh for each action.
+No fingerprint or phone PIN is required for power actions. Existing sudo rights
+and systemd are required; blocking inhibitors are respected. These actions affect
+every PC user and interrupt running work.
 
 Readings can be missing, delayed or stale. An unreachable PC is not necessarily
 powered off. Check important work independently. Leaving/backgrounding the
@@ -29,6 +41,11 @@ excludes statutory consumer rights or liabilities that applicable law does not
 allow to be excluded. You can stop using the app at any time and erase its local
 data. Remove its public keys on the PC to revoke access fully.
 
+Selected process watches/history and macro templates are retained encrypted on
+the phone. Optional runner metadata and expected-success rules remain on the PC;
+erasing phone data does not erase those records. Do not save secrets in macro
+templates. Review commands before running them.
+
 See the Privacy policy for data handling and deletion. Open-source components
 remain subject to their respective licences, included in Open-source licences.
 Publisher/support details will be supplied in the public store listing before
@@ -39,13 +56,14 @@ Device verification and power actions
 Sentinel requires phone fingerprint or screen-lock verification only to reveal
 saved connection settings or terminal details. Opening the app, monitoring and
 shutdown do not require phone verification. Shutdown requires the PC sudo
-password entered fresh for each request. Android handles
-that verification; Sentinel never receives your phone PIN or biometric template.
+password entered fresh for each request. Android handles phone verification;
+Sentinel never receives your phone PIN or biometric template. A secure phone
+screen lock is required to reveal saved connection settings and terminal details.
 USE_BIOMETRIC enables the system verification prompt. Screenshots and recent-app
 previews of the app are blocked. Host/port/login profiles are encrypted in private
 phone storage with an Android Keystore AES-GCM key and remembered separately.
 
-Shutdown uses the existing Terminal SSH key and your PC account&#x27;s existing sudo
+Shutdown and reboot use the existing Terminal SSH key and your PC account&#x27;s existing sudo
 permissions. Each request asks for the PC administrator password in a masked field.
 This is the PC password, not your phone PIN. It is held only for that request, sent
 only to the fingerprint-verified SSH host when its sudo prompt is received, and
@@ -54,9 +72,9 @@ service. Raw authentication output is not displayed. Your PC/PAM may independent
 record authentication attempts under its existing logging policy.
 
 The app first verifies PC administrator authentication without a power command.
-Only an explicitly confirmed shutdown proceeds to a fixed systemctl command,
+Only an explicitly armed power action proceeds to a fixed systemctl command,
 respecting blocking inhibitors and existing sudo rights. The separate verification
-check cannot request shutdown. Password retries and shutdown retries are not
+check cannot request shutdown or reboot. Password retries and shutdown retries are not
 automatic. All PC users and running work can be affected; a lost reply is reported
 as uncertain. No new PC helper, software download, sudoers/polkit rule, SSH key
 authorisation, service or network change is made for shutdown. Existing monitoring

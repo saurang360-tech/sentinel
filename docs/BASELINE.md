@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Titus baseline — 27 October 2026
 
 Inspection was read-only. No remote services, user permissions, drivers, firewall rules, desktop settings, or storage were changed. No existing private key, password, cookie, token, or document content was read. Only relevant deployment status/configuration and hardware/system status were inspected.

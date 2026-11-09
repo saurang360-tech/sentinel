@@ -22,12 +22,15 @@ Preset validation: debug/release builds, Android lint, 35 JVM tests and nine
 isolated phone UI tests passed, including preset addition, per-tab widget
 removal/addition, upgrade preservation, navigation and persistence.
 
-The sections below describe the underlying capabilities and earlier verification.
+The sections below include dated implementation/verification records. Test
+counts and installation status describe each pass, not the current release gate.
+See [current readiness](RELEASE-READINESS.md) and the latest audit for release status.
 
 # Sentinel widget workspace
 
 The fixed page shell has been replaced by a persisted, user-editable workspace.
-Default tabs are Dashboard, Operations, Terminal, Control and Settings. Every
+The original redesign used Dashboard, Operations, Terminal, Control and Settings.
+Those are historical defaults; the current defaults are listed at the top. Every
 widget can be removed, moved between tabs, reordered and resized. Up to 12 tabs
 and 32 widgets per tab are supported. Deleting a tab removes its layout only;
 it does not revoke SSH keys, erase connections or delete task history.

@@ -1,5 +1,6 @@
 HISTORICAL ASSETS — refresh before publishing the widget workspace.
-The app no longer includes demo mode. The following demo captures are archived
+The app no longer includes demo mode. tools/capture_store_screenshots.py is
+retired and exits without touching a phone. The following demo captures are archived
 references and must not be used to represent the current app.
 
 STORE ASSETS — SENTINEL 0.9

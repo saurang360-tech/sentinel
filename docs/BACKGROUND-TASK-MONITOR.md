@@ -2,13 +2,15 @@
 
 This extends the earlier foreground-only task-watching pass with an explicitly
 started Android foreground service. It uses the existing monitoring SSH key and
-pinned host. No relay, remote software installation, shell privilege, wake/sleep
-policy, or network configuration is added.
+pinned host. The app update deploys no remote software or privilege/network
+changes; monitoring still requires a compatible administrator-reviewed helper on
+the PC. No relay or wake/sleep policy is added.
 
 ## Use
 
-After accepting privacy notice version 5 and pairing/updating the Linux helper,
-open Overview and choose **Start background monitor**. Android notification
+After accepting the current privacy notice (version 7) and pairing/updating the
+Linux helper, open the Monitor widget and choose **Start background monitor**.
+Add the Tasks preset or Monitor widget if it is not in your workspace. Android notification
 permission is requested at that action. An ongoing notification shows the session
 and provides **Stop**. **Test notification** tests a local Android handoff only.
 

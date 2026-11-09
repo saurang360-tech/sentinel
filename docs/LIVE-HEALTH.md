@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Live health
 
 Sentinel 0.5-health replaces illustrative Health/Details readings with `sentinel-health-v1` over the existing pinned Tailscale SSH connection and Android Keystore identity. No extra server port or account setup is required. Deployment review is in deployment/HEALTH-REVIEW.md.

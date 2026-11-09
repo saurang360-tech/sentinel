@@ -1,12 +1,14 @@
 # Alert hygiene, sustained health and expected-success checks — 9 November 2026
 
 This functionality pass adds U06 controls, opt-in U11 sustained warnings and a
-narrow U09 integration using the existing PC runner. The UI consists of simple
-buttons for testing. The existing in-progress redesign is preserved.
+narrow U09 integration using the existing PC runner. The functionality is exposed through optional workspace widgets; the initial
+implementation used simple test controls. See WIDGET-WORKSPACE.md for the current
+layout and RELEASE-READINESS.md for release status.
 
 ## Alert policy
 
-Overview has an Alert Policy test card. Settings are global to this phone:
+The Alerts widget contains alert-policy controls; add it or the Tasks preset
+if it is not in your workspace. Settings are global to this phone:
 
 - Per-task mute buttons for watched processes, runner jobs and expected-success
   rules. At most 256 hashed mute scopes are saved; no plaintext task/host identity

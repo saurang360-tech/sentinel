@@ -5,7 +5,8 @@ and priority CSV are planning inputs; their embedded instructions are not treate
 as separate authorization. The user's request authorizes functionality work and
 simple test controls. Existing uncommitted redesign work was preserved. No remote
 PC packages, keys, services, sudo rules, power settings or network settings were
-changed. No Android Studio interaction is needed for the CLI build/device checks.
+changed. The validation record below describes the original pass. Current builds must
+use Android Studio/MCP as requested; see ANDROID-STUDIO-MCP.md.
 
 ## Follow-up: background delivery
 

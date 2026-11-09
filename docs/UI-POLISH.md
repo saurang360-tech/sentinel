@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Interface polish — Sentinel 0.6
 
 The main screens now use a shared connection/refresh row, short local update times, sentence-case headings, consistent card spacing and accessible selected navigation tabs. Overview keeps the large circular power control above a focused workstation summary, as requested. The control is visibly disabled and labelled “Shutdown not configured.” Shutdown remains unimplemented and no power command is exposed.

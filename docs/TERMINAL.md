@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Basic SSH Terminal — Sentinel 0.8.0
 
 Terminal opens a separate line-oriented SSH shell over the saved connection. It does not mirror an existing Kitty window or implement Kitty graphics, curses/full-screen applications or persistent screen sessions. No new package/library was added; Android Studio built the app using Gradle offline mode and existing cached dependencies. Bash and SSH were already installed on the PC.

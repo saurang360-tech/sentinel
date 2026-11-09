@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # Sentinel branding
 
 The app display name is Sentinel. The original vector mark combines a segmented centurion crest, an angular helmet and a protective shield in white on near-black. Its geometry is designed for small launcher icons and the existing monochrome interface.

@@ -1,6 +1,6 @@
 # Sentinel 0.10 — Data safety worksheet
 
-Updated 7 November 2026 for the current direct-SSH design. This is a submission
+Updated 9 November 2026 for the current direct-SSH design. This is a submission
 worksheet, not a completed Play Console declaration or approval.
 
 There is no developer backend, account, analytics, advertising, automatic crash
@@ -38,7 +38,7 @@ connection configuration in memory without weakening the locked vault and show
 an ongoing notification with Stop. No boot restart, relay or analytics is added.
 Foreground-service Play declarations, purpose eligibility and real idle/overnight
 checks are outstanding release requirements. Notification handoff does not prove
-display or user receipt. Privacy notice version 6 describes these flows.
+display or user receipt. Privacy notice version 7 describes these flows.
 
 Basis: Google's current guidance excludes on-device processing and end-to-end
 encrypted data unreadable by intermediaries/developer from collection reporting.
@@ -66,11 +66,12 @@ it is not sent to the developer and is not permission for developer collection.
 
 0.10 update: USE_BIOMETRIC enables Android's own saved-settings/terminal verification; no
 biometric template or phone PIN enters the app. Saved connection profiles are
-AES-GCM encrypted locally. Shutdown asks for a PC sudo password per request,
+AES-GCM encrypted locally. Shutdown and reboot ask for a PC sudo password per request,
 sends it only over pinned SSH when the PC's sudo prompt arrives, and never saves
 it or sends it to the developer. This direct encrypted credential flow must stay
 disclosed in the public privacy policy even though no developer collection occurs.
-The optional shutdown path installs nothing or changes no PC permissions.
+The optional power path installs no additional PC software and changes no PC
+permissions. Monitoring still requires the reviewed helper.
 
 9 November alert/assurance update: global quiet hours, severity, cooldown and health
 opt-in are private phone settings; at most 256 mute rules are hashed. Deferral

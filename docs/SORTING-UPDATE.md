@@ -1,3 +1,9 @@
+Historical record/planning document. Feature descriptions, test counts and
+setup details below apply to that pass and may be superseded. Current behavior:
+README.md and docs/WIDGET-WORKSPACE.md. Current release status and reusable checks:
+docs/RELEASE-READINESS.md. Historical personal deployment data are not public
+onboarding defaults.
+
 # GUI process sorting — 0.7.1
 
 Adds CPU and RAM descending sort chips to the compact process page. Existing installed helpers are supported: when the v2 request is rejected with the explicit unsupported-request exit code (64), Sentinel requests the existing allowlisted legacy process sample and sorts it locally. Host-key/authentication/decoding failures never trigger this fallback. No workstation helper, keys, services or networking were changed for this installation.
